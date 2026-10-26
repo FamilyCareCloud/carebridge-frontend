@@ -152,3 +152,7 @@ fcc-frontend/
 - [fcc-frontend · 웹 화면](https://github.com/FamilyCareCloud/fcc-frontend)
 - [fcc-backend · 인증·데이터·API](https://github.com/FamilyCareCloud/fcc-backend)
 - [fcc-ai · 음성 인식 서버](https://github.com/FamilyCareCloud/fcc-ai)
+
+## 케어브릿지
+
+메모 작성부터 담당자 검토와 승인된 가족 미리보기까지의 화면은 [CAREBRIDGE.md](docs/CAREBRIDGE.md)를 참고하세요.
