@@ -23,7 +23,7 @@ function qs(query?: Record<string, string | undefined>) {
   return s ? `?${s}` : "";
 }
 
-async function request<T>(
+export async function request<T>(
   path: string,
   opts: { method?: string; token?: string | null; body?: unknown } = {},
 ): Promise<T> {
