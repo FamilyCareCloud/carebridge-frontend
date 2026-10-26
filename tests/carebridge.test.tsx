@@ -99,3 +99,17 @@ describe("CareBridge 역할과 검토 화면",()=>{
   expect(cancel).toHaveBeenCalledOnce();
  });
 });
+
+it("케어브릿지는 모바일 주 메뉴에도 있고 긴 검토 화면을 축소하지 않음",async()=>{
+ const {Shell}=await import("../src/Shell");
+ const navigate=vi.fn();
+ const names=["대시보드","일정","돌봄 기록","케어브릿지","가족 관리"];
+ const view=render(<Shell page="케어브릿지" navItems={names.map(name=>({name,icon:"file",english:name}))} navigate={navigate} name="검토자" onProfileClick={()=>{}} toast="" onToastClose={()=>{}}><p>긴 관찰 원문</p></Shell>);
+ const nav=screen.getByRole("navigation",{name:"주 메뉴"});
+ expect(nav.textContent).toContain("케어브릿지");
+ expect(nav.style.gridTemplateColumns).toContain("repeat(5");
+ fireEvent.click(screen.getByRole("button",{name:"케어브릿지"}));
+ expect(navigate).toHaveBeenCalledWith("케어브릿지");
+ expect(view.container.querySelector(".viewport-fit")).toBeNull();
+ expect(view.container.querySelector(".carebridge-scroll")).toBeTruthy();
+});
