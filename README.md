@@ -61,7 +61,7 @@ npm run dev:carebridge
 
 로컬 WebSocket 프록시는 개발 서버 시작 시 백엔드 /health의 carebridge.websocketUrl을 읽습니다. 필요하면 VITE_DEV_WS_TARGET으로 지정합니다. 프록시는 VITE_DEV_FRONTEND_ORIGIN을 Origin으로 전달하며 백엔드의 허용 출처와 일치해야 합니다. 재배포로 주소가 생기거나 바뀌면 개발 서버를 재시작합니다. 운영 브라우저는 백엔드가 허용한 출처에서 WebSocket에 직접 연결합니다.
 
-2026-10-29 확인: ac8ded5의 자동 테스트는 통과했지만 AWS 배포는 WebSocket API 생성 권한 부족으로 롤백됐습니다. 제공 API의 health에는 새 version/websocketUrl이 없었습니다. 재배포 후 실제 계정과 두 브라우저로 수용 검증하기 전에는 전체 연동 완료로 판단하지 않습니다.
+2026-10-29 확인: 배포 역할의 권한과 WebSocket API 이름 누락을 보완한 backend develop@358caeb가 AWS에 배포됐습니다. /health의 version·websocketUrl과 배포 자동 검사가 통과했습니다. 실제 사용자 계정과 두 브라우저를 이용한 전체 업무 수용 검증은 별도입니다.
 ## 구조
 
 | 경로 | 역할 |
