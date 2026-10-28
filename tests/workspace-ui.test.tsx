@@ -1,0 +1,166 @@
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { gateway } from "../src/workspace/gateway";
+import type { MockGateway } from "../src/workspace/mock";
+import WorkspaceApp from "../src/workspace/WorkspaceApp";
+
+vi.mock("../src/workspace/gateway", async () => {
+  const { MockGateway } = await import("../src/workspace/mock");
+  return { gateway: new MockGateway(), isMock: true };
+});
+const api = gateway as MockGateway;
+beforeEach(() => {
+  localStorage.clear();
+  vi.stubGlobal("scrollTo", vi.fn());
+});
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
+async function login(id: string) {
+  fireEvent.change(screen.getByLabelText("로그인 ID"), {
+    target: { value: id },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "로그인 →" }));
+  await screen.findByRole("navigation", { name: "주 메뉴" });
+}
+
+describe("CareBridge role workspace screens", () => {
+  it("hides an open reader detail without refresh when the reviewer revokes it", async () => {
+    render(<WorkspaceApp />);
+    await login("reader");
+    fireEvent.click(
+      await screen.findByRole("button", { name: "전달 내용 읽기 →" }),
+    );
+    const dialog = screen.getByRole("dialog");
+    expect(
+      within(dialog).getByText(
+        "오후에 책을 읽으셨으며, 물 한 잔을 제공했습니다.",
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByText("원문 메모")).toBeNull();
+    expect(screen.queryByRole("button", { name: "검토함" })).toBeNull();
+    const reviewer = await api.login("reviewer", "demo");
+    await act(async () => {
+      await api.execute(reviewer, "reviewer", {
+        type: "revoke",
+        id: "p1",
+        version: 1,
+      });
+    });
+    expect(await screen.findByText("기록 표시가 중단되었습니다")).toBeTruthy();
+    expect(
+      screen.queryByText("오후에 책을 읽으셨으며, 물 한 잔을 제공했습니다."),
+    ).toBeNull();
+  });
+  it("keeps reader content hidden after stream disconnect even if an older snapshot returns late", async () => {
+    let disconnected = () => {};
+    const original = api.subscribe.bind(api);
+    vi.spyOn(api, "subscribe").mockImplementation(
+      (s, changed, failed, ready) => {
+        disconnected = failed;
+        return original(s, changed, failed, ready);
+      },
+    );
+    render(<WorkspaceApp />);
+    await login("reader");
+    fireEvent.click(
+      await screen.findByRole("button", { name: "전달 내용 읽기 →" }),
+    );
+    const reader = await api.login("reader", "demo");
+    const old = await api.snapshot(reader, "reader");
+    let resolveLate!: (value: typeof old) => void;
+    vi.spyOn(api, "snapshot").mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveLate = resolve;
+        }),
+    );
+    act(() => window.dispatchEvent(new Event("focus")));
+    act(() => disconnected());
+    await act(async () => resolveLate(old));
+    expect(screen.getByText("접근 권한을 다시 확인해야 합니다")).toBeTruthy();
+    expect(
+      screen.queryByText("오후에 책을 읽으셨으며, 물 한 잔을 제공했습니다."),
+    ).toBeNull();
+  });
+  it("requires generation and explicit submission and preserves manual text on regeneration cancellation", async () => {
+    render(<WorkspaceApp />);
+    await login("author");
+    fireEvent.click(
+      await screen.findByRole("button", { name: "＋ 새 메모 작성" }),
+    );
+    fireEvent.change(screen.getByLabelText("돌봄 대상"), {
+      target: { value: "s1" },
+    });
+    fireEvent.change(screen.getByLabelText("원문 메모"), {
+      target: { value: "합성 메모입니다." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "✧ 초안 만들기" }));
+    const final = await screen.findByLabelText("제출할 최종 초안");
+    fireEvent.change(final, { target: { value: "내가 직접 수정한 초안" } });
+    fireEvent.click(screen.getByRole("button", { name: "초안 다시 생성" }));
+    fireEvent.click(
+      within(screen.getByRole("dialog")).getByRole("button", { name: "취소" }),
+    );
+    expect((final as HTMLTextAreaElement).value).toBe("내가 직접 수정한 초안");
+    const author = await api.login("author", "demo");
+    expect((await api.snapshot(author, "author")).submissions).toHaveLength(3);
+    fireEvent.click(
+      screen.getByRole("button", { name: "확인했어요 · 검토 요청 →" }),
+    );
+    await screen.findByText("담당자에게 검토를 요청했습니다.", {
+      exact: false,
+    });
+    expect((await api.snapshot(author, "author")).submissions).toHaveLength(4);
+  });
+  it("forces explicit recipients and a separate preview before publication", async () => {
+    render(<WorkspaceApp />);
+    await login("reviewer");
+    await screen.findByText("오늘의 기록, 함께 확인해요");
+    const reviewer = await api.login("reviewer", "demo");
+    await act(async () => {
+      await api.execute(reviewer, "reviewer", {
+        type: "revoke",
+        id: "p1",
+        version: 1,
+      });
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: "공개 기록", exact: true }),
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: "내용·수신자 선택" }),
+    );
+    const preview = screen.getByRole("button", {
+      name: "공개 내용 미리보기 →",
+    }) as HTMLButtonElement;
+    expect(preview.disabled).toBe(true);
+    fireEvent.click(screen.getByRole("checkbox", { name: "김민서" }));
+    fireEvent.click(preview);
+    expect(
+      screen.getByRole("dialog", { name: "공개 전 마지막 확인" }),
+    ).toBeTruthy();
+    expect(
+      (await api.snapshot(await api.login("reader", "demo"), "reader"))
+        .publications,
+    ).toHaveLength(0);
+    fireEvent.click(
+      screen.getByRole("button", { name: "선택한 수신자에게 공개" }),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(
+      (await api.snapshot(await api.login("reader", "demo"), "reader"))
+        .publications,
+    ).toHaveLength(1);
+  });
+});
