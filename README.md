@@ -1,6 +1,6 @@
 # CareBridge frontend
 
-요양기관의 작성자·검토자·수신자를 연결하는 웹 프론트엔드입니다. 현재는 **새 그룹별 화면과 모의 업무 흐름을 구현한 단계**이며, 실제 백엔드 및 AI 연동은 아직 완료하지 않았습니다.
+요양기관의 작성자·검토자·수신자를 연결하는 웹 프론트엔드입니다. 현재는 **백엔드 develop@ac8ded5의 REST·이벤트 계약에 맞춘 프론트 연결 준비 단계**입니다. 실제 배포 계정의 전체 업무 검증은 아직 완료하지 않았으며 AI 생성·검사는 연결하지 않습니다.
 
 ## 개발 실행
 
@@ -42,12 +42,26 @@ npm run dev:carebridge
 |---|---|
 | VITE_CAREBRIDGE_API_URL | 새 작업 공간의 실제 백엔드 기본 주소 |
 | VITE_API_BASE_URL | 보존된 기존 FCC 화면용 변수. 새 진입 화면에서는 사용하지 않음 |
-| VITE_DEV_PROXY_TARGET | 기존 Vite 프록시의 목적지. 새 업무 경로의 프록시는 연동 시 보완 필요 |
+| VITE_DEV_PROXY_TARGET | 로컬 REST 프록시 목적지. /backend, /auth, /me, /workspace-auth, /workspaces 지원 |
 
-`npm run dev`, `npm run build`, `npm run preview`는 실제 API 모드입니다. 주소 미설정·요청 실패를 모의 데이터로 대체하지 않습니다. **현재 HttpGateway는 임시 계약이므로 주소만 입력해도 최신 백엔드에 연결되는 상태는 아닙니다.** 실제 REST 경로·인증·응답·이벤트 계약에 맞춰 후속 수정해야 합니다.
+`npm run dev`, `npm run build`, `npm run preview`는 실제 API 모드입니다. 주소 미설정·요청 실패를 모의 데이터로 대체하지 않습니다. HttpGateway는 실제 REST 요청·응답을 화면 모델로 변환합니다. 로컬에서는 VITE_CAREBRIDGE_API_URL=/backend로 설정하고 npm run dev로 실행합니다. 배포 빌드는 같은 변수에 전체 HTTPS API 주소를 지정해야 합니다. /backend는 개발 프록시 경로이므로 운영 환경에는 사용하지 않습니다.
 
 `VITE_` 변수는 브라우저에 공개됩니다. 비밀번호나 AI 서비스 키를 넣지 않습니다. 현재 새 화면의 세션은 메모리에 보관하며 새로고침하면 재로그인이 필요합니다.
 
+
+### 연결 범위와 제약
+
+- 이메일 가입·인증코드·로그인·서버 로그아웃, 가입 역할 및 로컬 QA admin 전환.
+- 기관 생성·참여 승인·거절·퇴출, 대상자·제출·관리 이력 조회, 검토 수정·보류.
+- 공개 준비·공개·정정·철회 및 이전 요청·수락·취소. 대상 지정은 현재 서버의 사용자 ID 방식으로 제공합니다.
+- 로컬 SSE와 배포 WebSocket을 구분합니다. 소켓 연결 뒤 별도 티켓 재인증이 완료돼야 기록을 표시하고, 권한 확인 유효기간 만료·철회·단절 시 숨깁니다.
+- AI 생성·전사·검사 경로는 호출하지 않습니다. 기존 생성본이 있는 본인 기록의 재제출은 가능하지만, 새 생성본이 필요한 신규 제출은 아직 진행할 수 없습니다.
+- 최종 확정 요청은 서버에 전달합니다. 최신 내용의 유효한 검사 결과가 없으면 FINAL_QA_REQUIRED를 그대로 표시합니다. 검사 결과를 만들거나 검증을 우회하지 않습니다.
+- 배포 API에는 admin이 없습니다. admin은 백엔드 담당자가 준비한 로컬 QA 서버와 별도 비밀번호로만 사용합니다.
+
+로컬 WebSocket 프록시는 개발 서버 시작 시 백엔드 /health의 carebridge.websocketUrl을 읽습니다. 필요하면 VITE_DEV_WS_TARGET으로 지정합니다. 프록시는 VITE_DEV_FRONTEND_ORIGIN을 Origin으로 전달하며 백엔드의 허용 출처와 일치해야 합니다. 재배포로 주소가 생기거나 바뀌면 개발 서버를 재시작합니다. 운영 브라우저는 백엔드가 허용한 출처에서 WebSocket에 직접 연결합니다.
+
+2026-10-29 확인: ac8ded5의 자동 테스트는 통과했지만 AWS 배포는 WebSocket API 생성 권한 부족으로 롤백됐습니다. 제공 API의 health에는 새 version/websocketUrl이 없었습니다. 재배포 후 실제 계정과 두 브라우저로 수용 검증하기 전에는 전체 연동 완료로 판단하지 않습니다.
 ## 구조
 
 | 경로 | 역할 |
@@ -57,6 +71,7 @@ npm run dev:carebridge
 | src/workspace/Login.tsx, ui.tsx, workspace.css | 인증 화면·공통 UI·스타일 |
 | src/workspace/model.ts | 화면 모델과 Gateway 인터페이스 |
 | src/workspace/gateway.ts | 실제 API 어댑터와 모드 선택 |
+| src/workspace/realtime.ts | SSE·WebSocket 권한 재확인과 연결 수명 관리 |
 | src/workspace/mock.ts | 개발·테스트용 합성 데이터와 모의 API |
 | tests/workspace-*.test.tsx | 정책·화면·통신 테스트 |
 

@@ -3,6 +3,8 @@ export type Status = "pending" | "held" | "confirmed";
 export type User = { id: string; name: string; role: Role; admin?: boolean };
 export type Session = { token: string; user: User };
 export type Member = {
+  requestId?: string;
+  requestVersion?: number;
   userId: string;
   name: string;
   role: Role;
@@ -16,6 +18,8 @@ export type Subject = {
   number: number;
 };
 export type Submission = {
+  generationId?: string;
+  warnings?: string[];
   id: string;
   threadId: string;
   previousId?: string;
@@ -40,7 +44,7 @@ export type Publication = {
   subjectNumber: number;
   content: string;
   recipients: string[];
-  state: "published" | "revoked";
+  state: "published" | "revoked" | "unpublished" | "blocked";
   publishedAt: string;
   version: number;
 };
@@ -58,6 +62,7 @@ export type Workspace = {
   ownerId: string;
 };
 export type Snapshot = {
+  transfers?: Transfer[];
   workspace: Workspace | null;
   membership: Member | null;
   members: Member[];
@@ -68,6 +73,7 @@ export type Snapshot = {
   revision: number;
   transferCandidates: User[];
 };
+export type Transfer = { id: string; workspaceId: string; workspaceName: string; targetId: string; targetName: string; version: number; status: string; incoming: boolean };
 export type Command =
   | { type: "createWorkspace"; name: string }
   | { type: "join"; code: string }
@@ -75,6 +81,8 @@ export type Command =
       type: "membership";
       userId: string;
       status: "active" | "rejected" | "removed";
+      requestId?: string;
+      requestVersion?: number;
     }
   | { type: "subject"; name: string; memo: string }
   | {
@@ -87,6 +95,7 @@ export type Command =
       threadId?: string;
       previousId?: string;
       requestId: string;
+      generationId?: string;
     }
   | {
       type: "review";
@@ -102,10 +111,17 @@ export type Command =
       version: number;
       content: string;
       recipients: string[];
+      publicationId?: string;
+      publicationVersion?: number;
     }
   | { type: "revoke"; id: string; version: number }
-  | { type: "transfer"; userId: string };
+  | { type: "transfer"; userId: string }
+  | { type: "acceptTransfer" | "cancelTransfer"; workspaceId: string; id: string; version: number };
 export interface Gateway {
+  logout?(session: Session): Promise<void>;
+  selectRole?(session: Session, role: Role): Promise<Session>;
+  confirmEmail?(email: string, code: string): Promise<void>;
+  resendConfirmation?(email: string): Promise<void>;
   mode: "mock" | "api";
   login(id: string, password: string): Promise<Session>;
   register(
@@ -125,7 +141,7 @@ export interface Gateway {
   subscribe(
     session: Session,
     onChange: () => void,
-    onDisconnect: () => void,
+    onDisconnect: (message?: string) => void,
     onConnected: () => void,
   ): () => void;
 }
@@ -140,7 +156,7 @@ export const statusNames: Record<Status, string> = {
   confirmed: "검토 완료",
 };
 export const stamp = (value: string) =>
-  new Intl.DateTimeFormat("ko-KR", {
+  !value || Number.isNaN(Date.parse(value)) ? "—" : new Intl.DateTimeFormat("ko-KR", {
     month: "long",
     day: "numeric",
     hour: "2-digit",

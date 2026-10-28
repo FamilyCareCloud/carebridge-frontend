@@ -282,6 +282,8 @@ export class MockGateway implements Gateway {
     };
   }
   async execute(session: Session, role: Role, command: Command): Promise<void> {
+    if (command.type === "acceptTransfer" || command.type === "cancelTransfer")
+      throw new Error("모의 환경은 즉시 이전만 지원합니다.");
     const db = this.read();
     const user = this.user(db, session, role);
     const c = command;
@@ -497,6 +499,8 @@ export class MockGateway implements Gateway {
       publish: "기록 공개",
       revoke: "공개 차단",
       transfer: "관리 권한 이전",
+      acceptTransfer: "관리 권한 이전 수락",
+      cancelTransfer: "관리 권한 이전 취소",
     };
     let details = "";
     if (c.type === "review")

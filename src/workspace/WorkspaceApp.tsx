@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { gateway, isMock } from "./gateway";
+import { ApiError, gateway, isMock } from "./gateway";
 import { MockGateway } from "./mock";
 import { roleNames, stamp, statusNames } from "./model";
 import type {
@@ -105,6 +105,9 @@ export default function WorkspaceApp() {
       null,
     );
   const [regenerate, setRegenerate] = useState(false);
+  const [existingPublication, setExistingPublication] = useState<Publication | null>(null);
+  const [sourceChecked, setSourceChecked] = useState(false);
+  const [checksChecked, setChecksChecked] = useState(false);
   const epoch = useRef(0),
     generation = useRef(0),
     readOrder = useRef(0),
@@ -125,6 +128,9 @@ export default function WorkspaceApp() {
       }
     } catch (err) {
       if (e === epoch.current && order === readOrder.current) {
+        if (err instanceof ApiError && err.status === 401) {
+          setSession(null);
+        }
         setData(null);
         setOffline(true);
         setError((err as Error).message);
@@ -140,21 +146,26 @@ export default function WorkspaceApp() {
       setData(null);
       void refresh();
     };
-    const disconnect = () => {
+    const disconnect = (message?: string) => {
       if (e !== epoch.current) return;
       connected.current = false;
       readOrder.current++;
       setOffline(true);
       setData(null);
+      if (message) setError(message);
     };
     const stop = gateway.subscribe(session, invalidate, disconnect, () => {
       if (e !== epoch.current) return;
       connected.current = true;
       void refresh();
     });
+    const reconnect = () => {
+      disconnect();
+      setRetry((r) => r + 1);
+    };
     const visibility = () => {
       setData(null);
-      if (!document.hidden) void refresh();
+      if (!document.hidden) reconnect();
     };
     const restore = (event: PageTransitionEvent) => {
       if (event.persisted) {
@@ -163,18 +174,19 @@ export default function WorkspaceApp() {
         setRetry((r) => r + 1);
       }
     };
-    window.addEventListener("focus", invalidate);
-    window.addEventListener("offline", disconnect);
-    window.addEventListener("pagehide", disconnect);
+    const disconnectedEvent = () => disconnect();
+    window.addEventListener("focus", reconnect);
+    window.addEventListener("offline", disconnectedEvent);
+    window.addEventListener("pagehide", disconnectedEvent);
     window.addEventListener("pageshow", restore);
     document.addEventListener("visibilitychange", visibility);
     return () => {
       epoch.current = e + 1;
       connected.current = false;
       stop();
-      window.removeEventListener("focus", invalidate);
-      window.removeEventListener("offline", disconnect);
-      window.removeEventListener("pagehide", disconnect);
+      window.removeEventListener("focus", reconnect);
+      window.removeEventListener("offline", disconnectedEvent);
+      window.removeEventListener("pagehide", disconnectedEvent);
       window.removeEventListener("pageshow", restore);
       document.removeEventListener("visibilitychange", visibility);
     };
@@ -192,6 +204,7 @@ export default function WorkspaceApp() {
     setSelected(null);
     setReaderId(null);
     setPublishId(null);
+    setExistingPublication(null);
     setPublishContent("");
     setRecipients([]);
     setReview("");
@@ -224,6 +237,29 @@ export default function WorkspaceApp() {
     setError("");
     window.scrollTo({ top: 0 });
   }
+  async function logout() {
+    const current = session;
+    epoch.current++;
+    connected.current = false;
+    clearViews();
+    setSession(null);
+    if (current) {
+      try { await gateway.logout?.(current); }
+      catch { window.alert("이 기기에서는 로그아웃했지만 서버 세션 종료에 실패했습니다."); }
+    }
+  }
+  async function selectRole(next: Role) {
+    if (!session) return;
+    epoch.current++;
+    connected.current = false;
+    clearViews();
+    setBusy(true);
+    try {
+      if (gateway.selectRole) login(await gateway.selectRole(session, next));
+      else { setRole(next); setPage(next === "reader" ? "publications" : "home"); }
+    } catch (err) { setError((err as Error).message); setRetry(r=>r+1); }
+    finally { setBusy(false); }
+  }
   async function action(command: Command, message: string) {
     if (!session || busy || !connected.current) return false;
     const e = epoch.current;
@@ -235,6 +271,7 @@ export default function WorkspaceApp() {
       await refresh();
       if (e !== epoch.current) return false;
       setToast(message);
+      if (["createWorkspace", "join", "acceptTransfer"].includes(command.type)) setRetry(r=>r+1);
       return true;
     } catch (err) {
       if (e === epoch.current) setError((err as Error).message);
@@ -287,12 +324,15 @@ export default function WorkspaceApp() {
     navigate("compose");
   }
   function openNote(n: Submission) {
+    setSourceChecked(false);
+    setChecksChecked(false);
     setSelected(n.id);
     setReview(n.review || n.final);
     setReason(n.reason);
     setReviewVersion(n.version);
   }
   function openPublish(n: Submission, existing?: Publication) {
+    setExistingPublication(existing ?? pubs.find(p=>p.submissionId===n.id && p.state!=="published") ?? null);
     setPublishId(n.id);
     setPublishVersion(n.version);
     setPublishContent(existing?.content || n.review || n.final);
@@ -426,11 +466,7 @@ export default function WorkspaceApp() {
           </div>
           <button
             className="cb-text"
-            onClick={() => {
-              epoch.current++;
-              clearViews();
-              setSession(null);
-            }}
+            onClick={() => void logout()}
           >
             ↪ 로그아웃
           </button>
@@ -476,13 +512,8 @@ export default function WorkspaceApp() {
                 <select
                   aria-label="테스트 역할"
                   value={role}
-                  onChange={(e) => {
-                    epoch.current++;
-                    clearViews();
-                    const next = e.target.value as Role;
-                    setRole(next);
-                    setPage(next === "reader" ? "publications" : "home");
-                  }}
+                  disabled={busy}
+                  onChange={(e) => void selectRole(e.target.value as Role)}
                 >
                   {Object.entries(roleNames).map(([r, n]) => (
                     <option key={r} value={r}>
@@ -497,6 +528,7 @@ export default function WorkspaceApp() {
           </div>
         )}
         <main className="cb-content">
+          {!isMock && <div className="cb-notice">AI 생성·검사는 아직 연결하지 않았습니다. 기존 기록과 그룹 관리부터 연결 중이며, 신규 생성 및 검사 결과가 필요한 확정은 제한될 수 있습니다.</div>}
           {error && (
             <div className="cb-error" role="alert">
               {error}
@@ -550,6 +582,12 @@ export default function WorkspaceApp() {
                   }
                 </div>
               )}
+              {(data.transfers ?? []).filter(t=>t.incoming && t.status==="pending").map(t=>(
+                <div className="cb-notice" key={t.id}>
+                  {t.workspaceName} 관리 권한 이전 요청
+                  <button className="cb-primary" disabled={busy} onClick={()=>setConfirm({text:"이 기관의 관리 권한을 수락할까요?",command:{type:"acceptTransfer",workspaceId:t.workspaceId,id:t.id,version:t.version}})}>이전 수락</button>
+                </div>
+              ))}
               {role === "reviewer" ? (
                 <form
                   onSubmit={(e) => {
@@ -835,7 +873,7 @@ export default function WorkspaceApp() {
                       </div>
                       <button
                         className="cb-primary"
-                        disabled={busy || !draft.source.trim()}
+                        disabled={busy || !draft.source.trim() || !isMock}
                         onClick={() =>
                           draft.generated
                             ? setRegenerate(true)
@@ -1038,6 +1076,8 @@ export default function WorkspaceApp() {
                                   type: "membership",
                                   userId: m.userId,
                                   status: "rejected",
+                                  requestId: m.requestId,
+                                  requestVersion: m.requestVersion,
                                 },
                                 "거절했습니다. 사용자는 재요청할 수 있습니다.",
                               )
@@ -1054,6 +1094,8 @@ export default function WorkspaceApp() {
                                   type: "membership",
                                   userId: m.userId,
                                   status: "active",
+                                  requestId: m.requestId,
+                                  requestVersion: m.requestVersion,
                                 },
                                 "참여를 승인했습니다.",
                               )
@@ -1289,7 +1331,7 @@ export default function WorkspaceApp() {
                                       const n = notes.find(
                                         (n) => n.id === p.submissionId,
                                       );
-                                      if (n) openPublish(n, p);
+                                      if (n) openPublish(n, isMock ? p : {...p, version:p.version+1, state:"revoked"});
                                     }
                                   }}
                                 >
@@ -1393,9 +1435,10 @@ export default function WorkspaceApp() {
                             초대·수락 방식은 백엔드와 협의할 예정입니다.
                           </div>
                         )}
+                        <p className="cb-muted">내 사용자 ID: {user.id}</p>
                         <label>
                           새 2그룹 담당자
-                          <select
+                          {!isMock ? <input value={transfer} onChange={e=>setTransfer(e.target.value)} placeholder="이전받을 담당자의 사용자 ID" /> : <select
                             value={transfer}
                             onChange={(e) => setTransfer(e.target.value)}
                           >
@@ -1405,11 +1448,11 @@ export default function WorkspaceApp() {
                                 {u.name}
                               </option>
                             ))}
-                          </select>
+                          </select>}
                         </label>
                         <button
                           className="cb-secondary"
-                          disabled={!transfer}
+                          disabled={!transfer || busy || (!isMock && !!user.admin)}
                           onClick={() =>
                             setConfirm({
                               text: "관리 권한을 이전하면 현재 담당자는 이 그룹을 관리할 수 없습니다. 이전하시겠어요?",
@@ -1419,6 +1462,12 @@ export default function WorkspaceApp() {
                         >
                           관리 권한 이전
                         </button>
+                        {(data.transfers ?? []).filter(t=>!t.incoming).map(t=>(
+                          <div className="cb-notice" key={t.id}>
+                            {t.targetName} · {t.status === "pending" ? "수락 대기" : t.status === "completed" ? "이전 완료" : "취소됨"}
+                            {t.status==="pending" && <button className="cb-text" disabled={busy} onClick={()=>setConfirm({text:"이전 요청을 취소할까요?",command:{type:"cancelTransfer",workspaceId:t.workspaceId,id:t.id,version:t.version}})}>요청 취소</button>}
+                          </div>
+                        ))}
                       </>
                     )}
                     {isMock && user.admin && (
@@ -1512,8 +1561,17 @@ export default function WorkspaceApp() {
               <p>{note.reason}</p>
             </div>
           )}
+          {!isMock && (note.warnings ?? []).length > 0 && <div className="cb-notice">
+            <b>저장된 검사 확인사항</b>
+            {note.warnings!.map((warning,i)=><p key={i}>{warning}</p>)}
+          </div>}
           {role === "reviewer" && note.status !== "confirmed" ? (
             <>
+              {!isMock && <div className="cb-notice">
+                <label><input type="checkbox" checked={sourceChecked} onChange={e=>setSourceChecked(e.target.checked)} /> 원문을 대조했습니다.</label>
+                <label><input type="checkbox" checked={checksChecked} onChange={e=>setChecksChecked(e.target.checked)} /> 확인사항과 경고를 확인했습니다. 경고가 있어도 확정할 수 있습니다.</label>
+                최종 내용에 연결된 검사 결과가 없으면 서버가 확정을 거절합니다. 이번 단계에서는 AI 검사를 새로 실행하지 않습니다.
+              </div>}
               <label>
                 검토 내용
                 <textarea
@@ -1538,7 +1596,7 @@ export default function WorkspaceApp() {
                     className={
                       s === "confirmed" ? "cb-primary" : "cb-secondary"
                     }
-                    disabled={busy || !review.trim()}
+                    disabled={busy || !review.trim() || (!isMock && s === "confirmed" && (!sourceChecked || !checksChecked))}
                     onClick={() =>
                       void action(
                         {
@@ -1669,6 +1727,7 @@ export default function WorkspaceApp() {
                           version: publishVersion,
                           content: publishContent,
                           recipients,
+                          ...(existingPublication ? {publicationId:existingPublication.id,publicationVersion:existingPublication.version} : {}),
                         },
                         "선택한 수신자에게 공개했습니다.",
                       )

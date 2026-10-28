@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { gateway, isMock } from "./gateway";
+import { ApiError, gateway, isMock } from "./gateway";
 import { demoUsers, MockGateway } from "./mock";
 import { roleNames } from "./model";
 import type { Role, Session } from "./model";
@@ -18,17 +18,30 @@ export default function Login({
   const [role, setRole] = useState<Role>("author");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [verification, setVerification] = useState(false);
+  const [code, setCode] = useState("");
+  const [notice, setNotice] = useState("");
   async function submit(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError("");
     try {
+      if (verification) {
+        await gateway.confirmEmail?.(id, code);
+        setVerification(false);
+        setSignup(false);
+        setNotice("이메일 인증을 완료했습니다. 로그인해 주세요.");
+        return;
+      }
       onSession(
         await (signup
           ? gateway.register(name, id, password, role)
           : gateway.login(id, password)),
       );
     } catch (e) {
+      if (e instanceof ApiError && (e.code === "EMAIL_NOT_VERIFIED" || e.details?.confirmationRequired)) {
+        setVerification(true);
+      }
       setError((e as Error).message);
     } finally {
       setBusy(false);
@@ -63,6 +76,8 @@ export default function Login({
           <span className="cb-eyebrow">CAREBRIDGE WORKSPACE</span>
           <h2>{signup ? "함께 기록을 시작해요" : "다시 만나 반가워요"}</h2>
           <p>기관의 돌봄 기록을 한곳에서 확인하세요.</p>
+          {!isMock && <p className="cb-notice">일반 계정은 이메일로 로그인합니다. admin은 별도 로컬 QA 서버에서만 사용할 수 있습니다.</p>}
+          {notice && <p role="status" className="cb-notice">{notice}</p>}
           {isMock && (
             <div className="cb-notice">
               로컬 화면 QA · 합성 데이터만 사용합니다.
@@ -70,7 +85,7 @@ export default function Login({
               모의 비밀번호는 <b>demo</b>입니다. 실제 계정과 무관합니다.
             </div>
           )}
-          {signup && (
+          {signup && !verification && (
             <label>
               이름
               <input
@@ -81,7 +96,7 @@ export default function Login({
             </label>
           )}
           <label>
-            로그인 ID
+            {isMock ? "로그인 ID" : signup ? "이메일" : "이메일 또는 QA ID"}
             <input
               autoComplete="username"
               value={id}
@@ -89,7 +104,7 @@ export default function Login({
               required
             />
           </label>
-          <label>
+          {verification ? <label>이메일 인증코드<input value={code} onChange={e=>setCode(e.target.value)} autoComplete="one-time-code" required /></label> : <label>
             비밀번호
             <input
               type="password"
@@ -98,8 +113,8 @@ export default function Login({
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-          </label>
-          {signup && (
+          </label>}
+          {signup && !verification && (
             <label>
               가입 역할
               <select
@@ -121,13 +136,20 @@ export default function Login({
             </p>
           )}
           <button className="cb-primary cb-wide" disabled={busy}>
-            {busy ? "확인 중…" : signup ? "가입하기" : "로그인 →"}
+            {busy ? "확인 중…" : verification ? "이메일 인증" : signup ? "가입하기" : "로그인 →"}
           </button>
+          {!isMock && <button type="button" className="cb-link cb-wide" disabled={busy || !id.trim()} onClick={async()=>{
+            setBusy(true);setError("");
+            try { await gateway.resendConfirmation?.(id);setVerification(true);setNotice("인증메일 재전송을 요청했습니다."); }
+            catch(e){setError((e as Error).message);} finally {setBusy(false);}
+          }}>인증코드 재전송</button>}
           <button
             type="button"
             className="cb-link cb-wide"
             onClick={() => {
               setSignup(!signup);
+              setVerification(false);
+              setNotice("");
               setError("");
             }}
           >

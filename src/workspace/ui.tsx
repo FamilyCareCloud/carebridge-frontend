@@ -29,6 +29,8 @@ export function Badge({ status }: { status: string }) {
           removed: "퇴출",
           published: "공개 중",
           revoked: "열람 차단",
+          unpublished: "공개 준비",
+          blocked: "정정 중 · 열람 차단",
         } as Record<string, string>
       )[status] || status}
     </span>
