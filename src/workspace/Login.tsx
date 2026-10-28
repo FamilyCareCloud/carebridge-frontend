@@ -76,7 +76,6 @@ export default function Login({
           <span className="cb-eyebrow">CAREBRIDGE WORKSPACE</span>
           <h2>{signup ? "함께 기록을 시작해요" : "다시 만나 반가워요"}</h2>
           <p>기관의 돌봄 기록을 한곳에서 확인하세요.</p>
-          {!isMock && <p className="cb-notice">일반 계정은 이메일로 로그인합니다. admin은 별도 로컬 QA 서버에서만 사용할 수 있습니다.</p>}
           {notice && <p role="status" className="cb-notice">{notice}</p>}
           {isMock && (
             <div className="cb-notice">
@@ -96,7 +95,7 @@ export default function Login({
             </label>
           )}
           <label>
-            {isMock ? "로그인 ID" : signup ? "이메일" : "이메일 또는 QA ID"}
+            {isMock ? "로그인 ID" : "이메일"}
             <input
               autoComplete="username"
               value={id}
@@ -138,7 +137,7 @@ export default function Login({
           <button className="cb-primary cb-wide" disabled={busy}>
             {busy ? "확인 중…" : verification ? "이메일 인증" : signup ? "가입하기" : "로그인 →"}
           </button>
-          {!isMock && <button type="button" className="cb-link cb-wide" disabled={busy || !id.trim()} onClick={async()=>{
+          {!isMock && <button type="button" className="cb-link cb-wide" disabled={busy || !id.includes('@')} onClick={async()=>{
             setBusy(true);setError("");
             try { await gateway.resendConfirmation?.(id);setVerification(true);setNotice("인증메일 재전송을 요청했습니다."); }
             catch(e){setError((e as Error).message);} finally {setBusy(false);}

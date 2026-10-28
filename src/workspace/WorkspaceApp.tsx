@@ -498,13 +498,11 @@ export default function WorkspaceApp() {
             <span className="cb-avatar small">{user.name[0]}</span>
           </div>
         </header>
-        {(isMock || user.admin) && (
+        {isMock && (
           <div className="cb-devbar">
             <span>
-              <b>{isMock ? "LOCAL QA" : "TEST ADMIN"}</b>{" "}
-              {isMock
-                ? "합성 데이터 · AI 응답은 모의 결과입니다"
-                : "백엔드가 허용한 테스트 역할만 전환합니다"}
+              <b>LOCAL QA</b>{" "}
+              합성 데이터 · AI 응답은 모의 결과입니다
             </span>
             {user.admin ? (
               <label>
@@ -1409,19 +1407,22 @@ export default function WorkspaceApp() {
                     <dl>
                       <dt>이름</dt>
                       <dd>{user.name}</dd>
-                      <dt>가입 역할</dt>
+                      <dt>{user.admin ? "현재 역할" : "가입 역할"}</dt>
                       <dd>
-                        {user.admin
-                          ? "admin · QA 역할 예외"
-                          : roleNames[user.role]}
+                        {roleNames[role]}
                       </dd>
                       <dt>작업 그룹</dt>
                       <dd>{data.workspace?.name}</dd>
                     </dl>
-                    <p className="cb-muted">
-                      일반 계정의 역할은 회원가입 시 고정됩니다.
-                    </p>
-                    {role === "reviewer" && (
+                    {user.admin ? <label>
+                      사용 역할
+                      <select aria-label="사용 역할" value={role} disabled={busy} onChange={e => void selectRole(e.target.value as Role)}>
+                        {Object.entries(roleNames).map(([r, n], i) => <option key={r} value={r}>{i + 1}그룹 · {n}</option>)}
+                      </select>
+                    </label> : <p className="cb-muted">
+                      역할은 회원가입 시 고정됩니다.
+                    </p>}
+                    {role === "reviewer" && !user.admin && (
                       <>
                         <hr />
                         <h2>관리 권한 이전</h2>
