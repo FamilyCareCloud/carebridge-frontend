@@ -25,3 +25,5 @@
 npm run dev:carebridge는 계속 모의 모드다. 실제 검증은 VITE_CAREBRIDGE_API_URL을 지정한 npm run dev/build를 사용한다. 백엔드에는 carebridge-ai qa.v2 사전 보류 및 구간별 검사 계약 호환 변경(PR #8)이 필요하다. AI 연결은 기존 CAREBRIDGE_SERVICE_URL/API_KEY를 사용하고 공개 브라우저 변수에 키를 넣지 않는다.
 
 프론트 자동 검증은 실제 API 어댑터의 생성 ID·원문·인증·전사·검사 버전·실패 재시도, 실제 모드 화면의 입력 확인·생성·경고·검사 후 편집·메모 보존을 포함한다. 자동 화면 테스트의 서버는 모의 응답이다. 실제 GPU 결과와 로컬 기관 종단 검증, AWS 배포·Cognito 수용 검증은 각각 별도로 기록한다.
+
+이번 검증: 프론트 테스트 46건·lint·운영 빌드 통과. 백엔드 scripts/check-workspace-ai-live.mjs에서 실제 컴파일된 프론트 어댑터→로컬 HTTP/SSE→실제 CUDA 모델·Whisper로 기관 작성부터 별도 공개·철회까지 통과했다. 최초 실행에서 QA 원본 응답과 백엔드의 정규화된 qa 집계 구조 차이를 발견해 수정했다. 최종 검사는 {version,qa:{checks,issues,...}}를 읽고 실패 항목·hold 경고를 유지한다. 최초 실패 및 수정 후 성공은 AI 저장소 evaluation/workspace-ai-v14.json, workspace-ai-v15.json에 각각 보존한다. 배포 Cognito 계정과 실제 브라우저의 전체 수용 검증으로 집계하지 않는다.
