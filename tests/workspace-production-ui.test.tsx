@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import WorkspaceApp from '../src/workspace/WorkspaceApp';
 import { gateway } from '../src/workspace/gateway';
@@ -9,7 +9,7 @@ vi.mock('../src/workspace/gateway', async () => {
   return { ...actual, gateway: new MockGateway(), isMock: false };
 });
 beforeEach(() => { localStorage.clear(); vi.stubGlobal('scrollTo', vi.fn()); });
-afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+afterEach(() => { cleanup(); delete gateway.checkReview; vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 async function login(id: string) {
   fireEvent.change(screen.getByLabelText('이메일'), { target: { value: id } });
   fireEvent.change(screen.getByLabelText('비밀번호'), { target: { value: 'demo' } });
@@ -41,4 +41,48 @@ it('authenticated admin sees role selection only in settings without a public de
   expect(screen.queryByText('admin · QA 역할 예외')).toBeNull();
   fireEvent.change(selector, { target: { value: 'reader' } });
   expect(await screen.findByRole('heading', { name: '나에게 전달된 기록' })).toBeTruthy();
+});
+it('enables real generation after input confirmation and keeps its ID and warnings for submission', async () => {
+  vi.spyOn(gateway,'generate').mockResolvedValue({text:'주스를 마셨습니다.',source:'Drank juice.',generationId:'gpu-generation',warnings:['원문을 확인해 주세요.']});
+  const execute=vi.spyOn(gateway,'execute');
+  render(<WorkspaceApp />);await login('author');
+  fireEvent.click(await screen.findByRole('button',{name:'＋ 새 메모 작성'}));
+  fireEvent.change(screen.getByLabelText('돌봄 대상'),{target:{value:'s1'}});
+  fireEvent.change(screen.getByLabelText('원문 메모'),{target:{value:'Drank juice.'}});
+  fireEvent.change(screen.getByLabelText('작성 언어'),{target:{value:'en'}});
+  const generate=screen.getByRole('button',{name:'✧ 초안 만들기'}) as HTMLButtonElement;
+  expect(generate.disabled).toBe(true);
+  fireEvent.click(screen.getByRole('checkbox',{name:/연습용 메모/}));expect(generate.disabled).toBe(false);
+  fireEvent.click(generate);
+  await screen.findByLabelText('제출할 최종 초안');
+  expect(screen.getByText('원문을 확인해 주세요.')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button',{name:'확인했어요 · 검토 요청 →'}));
+  await waitFor(()=>expect(execute).toHaveBeenCalledWith(expect.anything(),'author',expect.objectContaining({type:'submit',generationId:'gpu-generation',source:'Drank juice.'})));
+});
+it('preserves a typed memo when actual generation fails', async()=>{
+  vi.spyOn(gateway,'generate').mockRejectedValue(new Error('AI 서버에 연결하지 못했습니다.'));
+  render(<WorkspaceApp />);await login('author');
+  fireEvent.click(await screen.findByRole('button',{name:'＋ 새 메모 작성'}));
+  fireEvent.change(screen.getByLabelText('원문 메모'),{target:{value:'원문을 보존합니다.'}});
+  fireEvent.click(screen.getByRole('checkbox',{name:/연습용 메모/}));
+  fireEvent.click(screen.getByRole('button',{name:'✧ 초안 만들기'}));
+  await screen.findByText('AI 서버에 연결하지 못했습니다.');
+  expect((screen.getByLabelText('원문 메모') as HTMLTextAreaElement).value).toBe('원문을 보존합니다.');
+  expect(screen.queryByLabelText('제출할 최종 초안')).toBeNull();
+});
+it('requires final QA and explicit warning confirmation again after editing', async()=>{
+  gateway.checkReview=vi.fn(async(_session,_role,_id,version,content)=>({version,content,status:'hold',warnings:['주스와 수프를 대조해 주세요.']}));
+  render(<WorkspaceApp />);await login('reviewer');
+  fireEvent.click((await screen.findAllByRole('button',{name:'내용 보기 ↗'}))[0]);
+  const confirm=screen.getByRole('button',{name:'검토 완료 · 확정'}) as HTMLButtonElement;
+  expect(confirm.disabled).toBe(true);
+  fireEvent.click(screen.getByRole('button',{name:'최종 내용 저장 · AI 검사'}));
+  await screen.findByText('주스와 수프를 대조해 주세요.');
+  expect(confirm.disabled).toBe(true);
+  fireEvent.click(screen.getByRole('checkbox',{name:'원문을 대조했습니다.'}));
+  fireEvent.click(screen.getByRole('checkbox',{name:/확인사항과 경고를 확인했습니다/}));
+  expect(confirm.disabled).toBe(false);
+  fireEvent.change(screen.getByLabelText('검토 내용'),{target:{value:'수정 후 다시 검사할 내용'}});
+  expect(confirm.disabled).toBe(true);
+  expect(screen.queryByText('주스와 수프를 대조해 주세요.')).toBeNull();
 });
