@@ -14,11 +14,15 @@ type JoinRequest = { requestId: string; userId: string; name: string; role: stri
 type ApiTransfer = { transferId: string; targetUserId: string; targetNameAtRequest?: string; targetCurrentName?: string; status: string; version: number };
 type ApiSubject = { subjectId: string; name: string; managementNumber: number; memo?: string };
 type ApiQa = { checks?: {code:string;passed:boolean}[]; issues?: { message: string; severity?:string }[] };
+type ApiAdditionalCheck = {question:string;evidence:{quote:string}};
+function draftWarnings(qa?:ApiQa,checks:ApiAdditionalCheck[]=[]) {
+  return [...new Set([...(qa?.issues?.map(i=>i.message) ?? []),...checks.map(c=>`${c.question} · 원문: ${c.evidence.quote.slice(0,160)}${c.evidence.quote.length>160?'…':''}`)])];
+}
 type ApiSubmission = {
   submissionId: string; threadId: string; parentSubmissionId?: string; authorId: string;
   authorNameAtSubmission?: string; authorCurrentName?: string; subject: ApiSubject;
   memo: string; authorDraft: string; generationId: string;
-  generatedDraft: { translation: { text: string }; source: { language: string }; qa?: ApiQa };
+  generatedDraft: { translation: { text: string }; source: { language: string }; qa?: ApiQa;additional_checks?:ApiAdditionalCheck[] };
   reviewContent?: string; reviews: { reason: string; at: string }[];
   status: "review_pending" | "held" | "confirmed"; version: number; submittedAt: string;
   finalQa?: { qa: ApiQa };
@@ -168,7 +172,7 @@ export class HttpGateway implements Gateway {
           subjectId:s.subject.subjectId,source:s.memo,language:s.generatedDraft.source.language,generated:s.generatedDraft.translation.text,
           final:s.authorDraft,review:s.reviewContent ?? "",reason:s.reviews.at(-1)?.reason ?? "",
           status:s.status==="review_pending"?"pending":s.status,createdAt:s.submittedAt,reviewedAt:s.reviews.at(-1)?.at,version:s.version,
-          generationId:s.generationId,warnings:(s.finalQa?.qa ?? s.generatedDraft.qa)?.issues?.map(i=>i.message) ?? []});
+          generationId:s.generationId,warnings:draftWarnings(s.finalQa?.qa ?? s.generatedDraft.qa,s.generatedDraft.additional_checks)});
       }
     }
     if(role !== "author") {
@@ -256,9 +260,9 @@ export class HttpGateway implements Gateway {
   }
   async generate(session: Session, role: Role, source: string, language: string): Promise<GenerationResult> {
     const path=this.aiPath(session,role,"author");
-    const result=await this.request<{generationId:string;draft:{source:{text:string};translation:{text:string};qa:ApiQa}}>(path+"/drafts",{memo:source,sourceLanguage:language,dataUse:"synthetic_deidentified"},session);
+    const result=await this.request<{generationId:string;draft:{source:{text:string};translation:{text:string};qa:ApiQa;additional_checks?:ApiAdditionalCheck[]}}>(path+"/drafts",{memo:source,sourceLanguage:language,dataUse:"synthetic_deidentified"},session);
     if (!result.generationId || result.draft?.source?.text!==source || !result.draft.translation?.text?.trim()) throw new ApiError("원문에 연결된 초안 응답을 확인하지 못했습니다.",502,"CAREBRIDGE_BAD_RESPONSE");
-    return {text:result.draft.translation.text,source,generationId:result.generationId,warnings:result.draft.qa?.issues?.map(i=>i.message) ?? []};
+    return {text:result.draft.translation.text,source,generationId:result.generationId,warnings:draftWarnings(result.draft.qa,result.draft.additional_checks)};
   }
   async transcribe(session: Session, role: Role, audioBase64: string, language: string) {
     const path=this.aiPath(session,role,"author");
