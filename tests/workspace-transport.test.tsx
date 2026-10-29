@@ -36,6 +36,20 @@ async function connect(api:HttpGateway) {
  await vi.waitFor(()=>expect(ready).toHaveBeenCalled());
 }
 describe("latest backend REST adapter",()=>{
+ it("shows source-author confirmation items in generated and stored draft warnings",async()=>{
+  stream=undefined!;const fetcher=setup("author"),api=new HttpGateway("https://api.example");await connect(api);
+  const additional_checks=[{question:"원문 작성자에게 장소를 확인해 주세요.",evidence:{quote:"Tidak berjalan ke taman."}}];
+  const original=fetcher.getMockImplementation()!;
+  fetcher.mockImplementation(async(input,init)=>{
+   if(String(input).endsWith("/submissions/n"))return json({...note,generatedDraft:{...note.generatedDraft,additional_checks}});
+   if(String(input).endsWith("/drafts"))return json({generationId:"g",draft:{source:{text:"Tidak berjalan ke taman."},translation:{text:"정원 또는 공원까지 걸어가지 않았습니다."},qa:{issues:[]},additional_checks}});
+   return original(input,init);
+  });
+  const data=await api.snapshot(session,"author");
+  expect(data.submissions[0].warnings).toContain("원문 작성자에게 장소를 확인해 주세요. · 원문: Tidak berjalan ke taman.");
+  const result=await api.generate(session,"author","Tidak berjalan ke taman.","id");
+  expect(result.warnings).toEqual(["원문 작성자에게 장소를 확인해 주세요. · 원문: Tidak berjalan ke taman."]);
+ });
  it("does not fall back to mock data and preserves server errors",async()=>{
   const fetcher=vi.fn().mockResolvedValue(json({error:"권한 없음",code:"FORBIDDEN"},403));vi.stubGlobal("fetch",fetcher);
   await expect(new HttpGateway("").login("admin","x")).rejects.toThrow("연결을 준비");expect(fetcher).not.toHaveBeenCalled();
