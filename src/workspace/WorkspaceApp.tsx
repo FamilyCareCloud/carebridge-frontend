@@ -121,30 +121,34 @@ export default function WorkspaceApp() {
     generation = useRef(0),
     readOrder = useRef(0),
     connected = useRef(false);
-  const refresh = useCallback(async () => {
-    if (!session || !connected.current) return;
-    const e = epoch.current,
-      order = ++readOrder.current;
-    try {
-      const next = await gateway.snapshot(session, role);
-      if (
-        connected.current &&
-        e === epoch.current &&
-        order === readOrder.current
-      ) {
-        setData(next);
-        setOffline(false);
-      }
-    } catch (err) {
-      if (e === epoch.current && order === readOrder.current) {
-        if (err instanceof ApiError && err.status === 401) {
-          setSession(null);
+  const refreshQueue = useRef<{ epoch: number; requested: number; promise: Promise<void> | null }>({epoch:-1,requested:0,promise:null});
+  const refresh = useCallback((): Promise<void> => {
+    if (!session || !connected.current) return Promise.resolve();
+    const e = epoch.current, order = ++readOrder.current;
+    if (refreshQueue.current.epoch !== e) refreshQueue.current={epoch:e,requested:order,promise:null};
+    const queue=refreshQueue.current;
+    queue.requested=order;
+    // QA save/check and stream invalidations can arrive together. Share one
+    // current read and perform a fresh trailing read; never render stale data.
+    if (queue.promise) return queue.promise;
+    queue.promise=(async () => {
+      while (connected.current && e===epoch.current) {
+        const requested=queue.requested;
+        try {
+          const next=await gateway.snapshot(session,role);
+          if (connected.current && e===epoch.current && requested===readOrder.current) {
+            setData(next);setOffline(false);
+          }
+        } catch (err) {
+          if (e===epoch.current && requested===readOrder.current) {
+            if (err instanceof ApiError && err.status===401) setSession(null);
+            setData(null);setOffline(true);setError((err as Error).message);
+          }
         }
-        setData(null);
-        setOffline(true);
-        setError((err as Error).message);
+        if (queue.requested===requested) break;
       }
-    }
+    })().finally(()=>{queue.promise=null;});
+    return queue.promise;
   }, [session, role]);
   useEffect(() => {
     const e = ++epoch.current;
