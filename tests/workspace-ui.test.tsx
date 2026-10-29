@@ -93,6 +93,31 @@ describe("CareBridge role workspace screens", () => {
       screen.queryByText("오후에 책을 읽으셨으며, 물 한 잔을 제공했습니다."),
     ).toBeNull();
   });
+  it("coalesces overlapping invalidations and never shows a stale snapshot", async () => {
+    let changed=()=>{};
+    const subscribe=api.subscribe.bind(api);
+    vi.spyOn(api,"subscribe").mockImplementation((s,onChange,failed,ready)=>{
+      changed=onChange;return subscribe(s,onChange,failed,ready);
+    });
+    render(<WorkspaceApp />);await login("author");
+    await screen.findByRole("button",{name:"＋ 새 메모 작성"});
+    const state=await api.snapshot(await api.login("author","demo"),"author");
+    const stale=structuredClone(state),fresh=structuredClone(state);
+    stale.submissions[0].final="오래된 재조회 내용";
+    fresh.submissions[0].final="가장 최신인 재조회 내용";fresh.revision++;
+    let resolveOld!:(value:typeof state)=>void,resolveNew!:(value:typeof state)=>void;
+    const snapshot=vi.spyOn(api,"snapshot")
+      .mockImplementationOnce(()=>new Promise(resolve=>{resolveOld=resolve;}))
+      .mockImplementationOnce(()=>new Promise(resolve=>{resolveNew=resolve;}));
+    act(()=>{changed();changed();changed();});
+    expect(snapshot).toHaveBeenCalledTimes(1);
+    await act(async()=>resolveOld(stale));
+    await waitFor(()=>expect(snapshot).toHaveBeenCalledTimes(2));
+    expect(screen.queryByText("오래된 재조회 내용")).toBeNull();
+    await act(async()=>resolveNew(fresh));
+    expect(await screen.findByText("가장 최신인 재조회 내용")).toBeTruthy();
+    expect(snapshot).toHaveBeenCalledTimes(2);
+  });
   it("requires generation and explicit submission and preserves manual text on regeneration cancellation", async () => {
     render(<WorkspaceApp />);
     await login("author");
