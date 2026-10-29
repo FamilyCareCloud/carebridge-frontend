@@ -8,14 +8,31 @@ vi.mock('../src/workspace/gateway', async () => {
   const { MockGateway } = await import('../src/workspace/mock');
   return { ...actual, gateway: new MockGateway(), isMock: false };
 });
-beforeEach(() => { localStorage.clear(); vi.stubGlobal('scrollTo', vi.fn()); });
-afterEach(() => { cleanup(); delete gateway.checkReview; vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+beforeEach(() => { localStorage.clear(); sessionStorage.clear(); vi.stubGlobal('scrollTo', vi.fn()); });
+afterEach(() => { cleanup(); delete gateway.checkReview; delete gateway.restoreSession; vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 async function login(id: string) {
   fireEvent.change(screen.getByLabelText('이메일'), { target: { value: id } });
   fireEvent.change(screen.getByLabelText('비밀번호'), { target: { value: 'demo' } });
   fireEvent.click(screen.getByRole('button', { name: '로그인 →' }));
   await screen.findByRole('navigation', { name: '주 메뉴' });
 }
+it('restores authenticated identity before showing the workspace',async()=>{
+  const session=await gateway.login('author','demo');
+  let resolve!:(value:typeof session)=>void;
+  gateway.restoreSession=vi.fn(()=>new Promise(r=>{resolve=r;}));
+  render(<WorkspaceApp />);
+  expect(screen.queryByRole('navigation')).toBeNull();
+  expect(screen.queryByLabelText('이메일')).toBeNull();
+  const {act}=await import('@testing-library/react');
+  await act(async()=>resolve(session));
+  expect(await screen.findByLabelText('원문 메모')).toBeTruthy();
+});
+it('lets a temporary restore failure retry without exposing stale records',async()=>{
+  gateway.restoreSession=vi.fn().mockRejectedValueOnce(new TypeError('network')).mockResolvedValueOnce(await gateway.login('reader','demo'));
+  render(<WorkspaceApp />);
+  fireEvent.click(await screen.findByRole('button',{name:'다시 확인'}));
+  expect(await screen.findByRole('heading',{name:'나에게 전달된 기록'})).toBeTruthy();
+});
 it('public login has no admin or QA guidance and still submits the literal ID', async () => {
   const spy = vi.spyOn(gateway, 'login');
   const { container } = render(<WorkspaceApp />);

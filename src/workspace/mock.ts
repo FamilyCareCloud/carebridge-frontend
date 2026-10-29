@@ -12,6 +12,8 @@ import type {
   User,
   Workspace,
 } from "./model";
+import { roleNames, statusNames } from './model';
+import { auditLabel } from './audit';
 
 const KEY = "carebridge.synthetic.workspace.v2";
 type DB = {
@@ -143,6 +145,7 @@ function seed(): DB {
         recipients: ["reader"],
         state: "published",
         publishedAt: now(),
+        recordedAt: submissions[2].createdAt,
         version: 1,
       },
     ],
@@ -241,7 +244,7 @@ export class MockGateway implements Gateway {
         : [],
       publications: active
         ? reviewer
-          ? db.publications
+          ? db.publications.map(p=>({...p,recordedAt:p.recordedAt ?? db.submissions.find(n=>n.id===p.submissionId)?.createdAt}))
           : role === "reader"
             ? db.publications
                 .filter(
@@ -249,7 +252,7 @@ export class MockGateway implements Gateway {
                     p.state === "published" &&
                     (user.admin || p.recipients.includes(user.id)),
                 )
-                .map((p) => ({ ...p, recipients: [] }))
+                .map((p) => ({ ...p, recordedAt:p.recordedAt ?? db.submissions.find(n=>n.id===p.submissionId)?.createdAt, recipients: [] }))
             : []
         : [],
       audit: reviewer ? db.audit : [],
@@ -458,7 +461,7 @@ export class MockGateway implements Gateway {
               p.state = "revoked";
               p.version++;
             });
-          db.publications.unshift({
+          db.publications.push({
             id: uuid(),
             submissionId: n.id,
             subjectName: s.name,
@@ -467,6 +470,7 @@ export class MockGateway implements Gateway {
             recipients: c.recipients,
             state: "published",
             publishedAt: now(),
+            recordedAt: n.createdAt,
             version: 1,
           });
         }
@@ -487,24 +491,19 @@ export class MockGateway implements Gateway {
         }
       }
     }
-    const names: Record<Command["type"], string> = {
-      createWorkspace: "작업 그룹 생성",
-      join: "참여 요청",
-      membership: "구성원 상태 변경",
-      subject: "돌봄 대상 등록",
-      submit: "메모 제출",
-      review: "기록 검토",
-      publish: "기록 공개",
-      revoke: "공개 차단",
-      transfer: "관리 권한 이전",
-      acceptTransfer: "관리 권한 이전 수락",
-      cancelTransfer: "관리 권한 이전 취소",
+    const actions: Record<Command["type"], string> = {
+      createWorkspace: 'create-workspace', join: 'request-join',
+      membership: c.type==='membership' ? {active:'approve',rejected:'reject',removed:'remove-member'}[c.status] : '',
+      subject: 'register-subject', submit: 'submit',
+      review: c.type==='review' ? {pending:'review-edit',held:'review-hold',confirmed:'review-confirm'}[c.status] : '',
+      publish: 'publish', revoke: 'revoke', transfer: 'complete-transfer',
+      acceptTransfer: 'complete-transfer', cancelTransfer: 'cancel-transfer',
     };
     let details = "";
     if (c.type === "review")
-      details = `제출 ${c.id}\n이전 검토 내용\n${oldReview?.review || "(없음)"}\n\n변경한 검토 내용\n${c.content}\n\n사유: ${c.reason || "(없음)"}\n상태: ${oldReview?.status} → ${c.status}`;
+      details = `제출 ${c.id}\n이전 검토 내용\n${oldReview?.review || "(없음)"}\n\n변경한 검토 내용\n${c.content}\n\n사유: ${c.reason || "(없음)"}\n상태: ${oldReview ? statusNames[oldReview.status] : '알 수 없음'} → ${statusNames[c.status]}`;
     if (c.type === "membership")
-      details = `${db.members.find((m) => m.userId === c.userId)?.name} · ${c.userId}\n참여 상태: ${c.status}`;
+      details = `${db.members.find((m) => m.userId === c.userId)?.name} · ${c.userId}\n참여 상태: ${{active:'참여 중',rejected:'참여 거절',removed:'퇴출'}[c.status]}`;
     if (c.type === "transfer")
       details = `이전 담당자: ${db.users.find((u) => u.id === oldOwner)?.name}\n새 담당자: ${db.users.find((u) => u.id === c.userId)?.name}`;
     if (c.type === "publish")
@@ -512,10 +511,11 @@ export class MockGateway implements Gateway {
     if (c.type === "revoke")
       details = `공개 기록 ${c.id}\n모든 수신자의 열람 차단`;
     if (c.type === "join")
-      details = `${user.name} · ${user.role}\n참여 승인 요청`;
+      details = `${user.name} · ${roleNames[user.role]}\n참여 승인 요청`;
     db.audit.unshift({
       id: uuid(),
-      text: names[c.type],
+      action: actions[c.type],
+      text: auditLabel(actions[c.type]),
       actor: user.name,
       at: now(),
       details,
@@ -539,5 +539,24 @@ export class MockGateway implements Gateway {
       window.removeEventListener(KEY, listener);
       window.removeEventListener("storage", storage);
     };
+  }
+}
+
+/** Tab-only synthetic identity, isolated from real API credentials. */
+export class PreviewGateway extends MockGateway {
+  private key = 'carebridge.preview.identity.v1';
+  async login(id: string, password: string): Promise<Session> {
+    const session = await super.login(id, password);
+    try { sessionStorage.setItem(this.key, session.user.id); } catch { /* disabled storage */ }
+    return session;
+  }
+  async restoreSession(): Promise<Session | null> {
+    try {
+      const id = sessionStorage.getItem(this.key);
+      return id ? await this.login(id, 'demo') : null;
+    } catch { await this.logout(); return null; }
+  }
+  async logout() {
+    try { sessionStorage.removeItem(this.key); } catch { /* disabled storage */ }
   }
 }

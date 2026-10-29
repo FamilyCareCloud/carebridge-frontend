@@ -36,6 +36,18 @@ async function connect(api:HttpGateway) {
  await vi.waitFor(()=>expect(ready).toHaveBeenCalled());
 }
 describe("latest backend REST adapter",()=>{
+ it('translates audit actions without losing actor, reason, time or the original action code',async()=>{
+  stream=undefined!;const fetcher=setup(),api=new HttpGateway('https://api.example');await connect(api);
+  const original=fetcher.getMockImplementation()!;
+  const actions=['review-edit','review-confirm','check-review','prepare-publication','publish','revoke','approve','future-action'];
+  fetcher.mockImplementation(async(input,init)=>String(input).includes('/audit?')
+   ? json({items:actions.map((action,i)=>({eventId:String(i),action,at:'2026-10-30T01:00:00Z',actorId:'u',actorNameAtEvent:'처리 당시 이름',actorCurrentName:'현재 이름',reason:i===0?'수량 확인':null})),nextCursor:null})
+   : original(input,init));
+  const {audit}=await api.snapshot(session,'reviewer');
+  expect(audit.map(a=>a.text)).toEqual(['검토 내용 수정','검토 완료','검토 내용 AI 검사','공개 내용·수신자 저장','기록 공개','기록 공개 차단','참여 승인','기타 활동']);
+  expect(audit[0]).toMatchObject({action:'review-edit',actor:'처리 당시 이름',at:'2026-10-30T01:00:00Z',details:'사유: 수량 확인'});
+  expect(audit.at(-1)?.action).toBe('future-action');
+ });
  it("allows a removed reader to request a different workspace without active access proof",async()=>{
   const reader={token:"reader-token",user:{id:"v",name:"열람자",role:"reader" as const}};
   const fetcher=vi.fn(async(input:RequestInfo|URL)=>String(input).endsWith("/join-requests")
@@ -101,7 +113,11 @@ describe("latest backend REST adapter",()=>{
  });
  it("requests only viewer-allowed resources",async()=>{
   stream=undefined!;const fetcher=setup("viewer");const api=new HttpGateway("https://api.example");await connect(api);
+  const original=fetcher.getMockImplementation()!;
+  fetcher.mockImplementation(async(input,init)=>String(input).endsWith('/publications')
+   ? json([{publicationId:'p',version:2,subject,content:'선별한 공개 내용',recordedAt:'2026-10-28T01:00:00Z',publishedAt:'2026-10-29T02:00:00Z'}]) : original(input,init));
   const data=await api.snapshot({...session,user:{...session.user,role:"reader"}},"reader");
+  expect(data.publications[0]).toMatchObject({recordedAt:'2026-10-28T01:00:00Z',publishedAt:'2026-10-29T02:00:00Z',recipients:[]});
   expect(data.submissions).toEqual([]);expect(data.members).toEqual([]);
   expect(fetcher.mock.calls.map(x=>String(x[0])).some(x=>x.endsWith("/subjects")||x.endsWith("/submissions"))).toBe(false);
  });

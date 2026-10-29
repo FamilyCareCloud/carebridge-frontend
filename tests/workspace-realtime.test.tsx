@@ -51,6 +51,27 @@ it("heartbeat never extends the authorization deadline",async()=>{
  await vi.advanceTimersByTimeAsync(1000);
  expect(failed).toHaveBeenCalledOnce();expect(proof).toHaveBeenLastCalledWith(null);
 });
+it('keeps a valid proof through transient renewal failure, but expires on time',async()=>{
+ const {socket,request,failed,proof}=await setup();socket.open();await vi.advanceTimersByTimeAsync(0);
+ socket.message({type:'revalidate',workspaceId:'w',revision:1,role:'author',validUntil:Date.now()/1000+60});
+ request.mockRejectedValue(new TypeError('network'));
+ await vi.advanceTimersByTimeAsync(59000);
+ expect(failed).not.toHaveBeenCalled();expect(proof).toHaveBeenLastCalledWith('w');
+ await vi.advanceTimersByTimeAsync(1000);expect(failed).toHaveBeenCalledOnce();expect(proof).toHaveBeenLastCalledWith(null);
+});
+it('rechecks on tab focus without tearing down the socket or extending the deadline',async()=>{
+ const {socket,failed,ready}=await setup();socket.open();await vi.advanceTimersByTimeAsync(0);
+ socket.message({type:'revalidate',workspaceId:'w',revision:1,role:'author',validUntil:Date.now()/1000+60});
+ window.dispatchEvent(new Event('focus'));await vi.advanceTimersByTimeAsync(0);
+ expect(socket.close).not.toHaveBeenCalled();expect(ready).toHaveBeenCalledOnce();
+ await vi.advanceTimersByTimeAsync(60000);expect(failed).toHaveBeenCalledOnce();
+});
+it('keeps the last proof only until its deadline after a socket closes',async()=>{
+ const {socket,failed}=await setup();socket.open();await vi.advanceTimersByTimeAsync(0);
+ socket.message({type:'revalidate',workspaceId:'w',revision:1,role:'author',validUntil:Date.now()/1000+60});
+ socket.close();expect(failed).not.toHaveBeenCalled();
+ await vi.advanceTimersByTimeAsync(60000);expect(failed).toHaveBeenCalledOnce();
+});
 it("keeps the screen through repeated unchanged proofs while renewing the access deadline",async()=>{
  const {socket,ready,changed,failed,proof}=await setup();
  socket.open();await vi.advanceTimersByTimeAsync(0);
@@ -65,16 +86,16 @@ it("keeps the screen through repeated unchanged proofs while renewing the access
  await vi.advanceTimersByTimeAsync(1000);
  expect(failed).toHaveBeenCalledOnce();expect(proof).toHaveBeenLastCalledWith(null);
 });
-it("reloads on revision or role changes even when the invalidation event was missed",async()=>{
- const {socket,changed}=await setup();
+it("refreshes changed revisions and blocks a changed role even when invalidation was missed",async()=>{
+ const {socket,changed,failed}=await setup();
  const renew=(revision:number,role:string)=>socket.message({type:"revalidate",workspaceId:"w",revision,role,validUntil:Date.now()/1000+60});
  renew(7,"viewer");renew(8,"viewer");
  expect(changed).toHaveBeenCalledTimes(1);
  renew(8,"viewer");expect(changed).toHaveBeenCalledTimes(1);
- renew(8,"author");expect(changed).toHaveBeenCalledTimes(2);
  // Explicit invalidation must still hide records immediately, even at the same revision.
  socket.message({type:"invalidate",workspaceId:"w",revision:8});
- expect(changed).toHaveBeenCalledTimes(3);
+ expect(changed).toHaveBeenCalledTimes(2);
+ renew(8,"author");expect(failed).toHaveBeenCalledWith('서버 역할이 변경되었습니다. 다시 로그인해 주세요.',403);
 });
 it("does not suppress refreshes when proof revision metadata is missing or malformed",async()=>{
  const {socket,changed}=await setup();
