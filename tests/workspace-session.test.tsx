@@ -67,3 +67,11 @@ it("logout during renewal never resurrects the session and revokes the fresh tok
   expect(session.refreshToken).toBeUndefined();
   await expect(api.request("/me",undefined,session)).rejects.toMatchObject({status:401});
 });
+it("does not send a queued protected mutation after logout even with a valid token",async()=>{
+  const fetcher=vi.fn().mockResolvedValue(json({loggedOut:true}));vi.stubGlobal("fetch",fetcher);
+  const api=new HttpGateway("https://api.example"),session={...expired(),expiresAt:fresh().expiresAt};
+  const request=api.request("/workspaces/w/submissions",{requestId:"must-not-send"},session);
+  const rejected=expect(request).rejects.toMatchObject({status:401});
+  await api.logout(session);await rejected;
+  expect(fetcher.mock.calls.map(([path])=>path)).toEqual(["https://api.example/auth/logout"]);
+});
