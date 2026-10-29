@@ -36,6 +36,19 @@ async function connect(api:HttpGateway) {
  await vi.waitFor(()=>expect(ready).toHaveBeenCalled());
 }
 describe("latest backend REST adapter",()=>{
+ it("allows a removed reader to request a different workspace without active access proof",async()=>{
+  const reader={token:"reader-token",user:{id:"v",name:"열람자",role:"reader" as const}};
+  const fetcher=vi.fn(async(input:RequestInfo|URL)=>String(input).endsWith("/join-requests")
+   ? json({requestId:"new-request",status:"pending"},201)
+   : json([{workspaceId:"old",name:"이전 기관",status:"removed",role:"viewer"}]));
+  vi.stubGlobal("fetch",fetcher);
+  const api=new HttpGateway("https://api.example");
+  expect((await api.snapshot(reader,"reader")).membership?.status).toBe("removed");
+  await api.execute(reader,"reader",{type:"join",code:"OTHER-INSTITUTION"});
+  expect(fetcher).toHaveBeenLastCalledWith("https://api.example/workspaces/join-requests",expect.objectContaining({
+   method:"POST",body:JSON.stringify({code:"OTHER-INSTITUTION"}),headers:expect.objectContaining({Authorization:"Bearer reader-token"})
+  }));
+ });
  it("shows source-author confirmation items in generated and stored draft warnings",async()=>{
   stream=undefined!;const fetcher=setup("author"),api=new HttpGateway("https://api.example");await connect(api);
   const additional_checks=[{question:"원문 작성자에게 장소를 확인해 주세요.",evidence:{quote:"Tidak berjalan ke taman."}}];
