@@ -15,6 +15,7 @@ export function subscribeWorkspace(o: Options): ()=>void {
   let poll:ReturnType<typeof setTimeout>|undefined;
   let renewal:ReturnType<typeof setInterval>|undefined;
   let validated=false;
+  let verifiedState:string|undefined;
   function clear() {clearTimeout(deadline);clearTimeout(poll);clearInterval(renewal);}
   function stop() {clear();controller.abort();socket?.close();o.proof(null);}
   function fail(message="실시간 접근 확인 연결이 종료되었습니다.") {
@@ -25,14 +26,20 @@ export function subscribeWorkspace(o: Options): ()=>void {
     clearTimeout(deadline);
     deadline=setTimeout(()=>fail("접근 확인 유효시간이 지났습니다. 다시 연결해 주세요."),ms);
   }
-  function verified(id:string) {
+  function verified(id:string, revision?:unknown, role?:unknown) {
     if(controller.signal.aborted) return;
+    const state=typeof revision==="number" && Number.isSafeInteger(revision) && revision>=0 && typeof role==="string" && role.length>0
+      ? JSON.stringify([revision,role]) : undefined;
+    const unchanged=state!==undefined && state===verifiedState;
+    verifiedState=state;
     o.proof(id);
-    if(!validated) {validated=true;o.onConnected();} else o.onChange();
+    // A fresh authorization proof alone must not clear the current screen.
+    // Changed or missing state still forces a reload, including missed invalidations.
+    if(!validated) {validated=true;o.onConnected();} else if(!unchanged) o.onChange();
   }
   async function connect(w:WorkspaceRow) {
     // A pending screen may have been shown; hide it while establishing proof.
-    o.proof(null); validated=false;
+    o.proof(null); validated=false; verifiedState=undefined;
     const path="/workspaces/"+encodeURIComponent(w.workspaceId);
     const response=await o.openStream(path+"/events",controller.signal);
     if(controller.signal.aborted) return;
@@ -90,7 +97,7 @@ export function subscribeWorkspace(o: Options): ()=>void {
         if(data.type==="revalidate") {
           const remaining=data.validUntil*1000-Date.now();
           if(!Number.isFinite(remaining) || remaining<=0) throw new Error("접근 확인 응답이 만료되었습니다.");
-          arm(Math.min(remaining,60000));verified(w.workspaceId);
+          arm(Math.min(remaining,60000));verified(w.workspaceId,data.revision,data.role);
         } else if(data.type==="invalidate" && validated) o.onChange();
         // heartbeat deliberately does not renew authorization.
       } catch(e) {fail((e as Error).message);}
