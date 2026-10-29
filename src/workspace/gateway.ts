@@ -87,6 +87,9 @@ export class HttpGateway implements Gateway {
   async request<T>(path: string, body?: unknown, session?: Session, signal?: AbortSignal, method = body === undefined ? "GET" : "POST", retryExpired=true): Promise<T> {
     if (!this.base) throw new ApiError("새 API 연결을 준비 중입니다. 서비스 주소를 설정해 주세요.");
     if(session)await this.prepare(session,signal);
+    // Even a resolved prepare() yields. logout can run in that gap without
+    // any renewal in progress; never send a protected request afterwards.
+    if(session && this.ended.has(session))throw new ApiError("로그인이 종료되었습니다. 다시 로그인해 주세요.",401,"SESSION_INVALID");
     const sentToken=session?.token;
     const response = await fetch(this.base + path, {
       method, headers: { ...(body === undefined ? {} : { "Content-Type": "application/json" }), ...(session ? { Authorization: `Bearer ${session.token}` } : {}) },
