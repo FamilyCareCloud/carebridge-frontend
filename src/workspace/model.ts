@@ -2,6 +2,8 @@ export type Role = "author" | "reviewer" | "reader";
 export type Status = "pending" | "held" | "confirmed";
 export type User = { id: string; name: string; role: Role; admin?: boolean };
 export type Session = { token: string; user: User };
+export type GenerationResult = { text: string; source: string; generationId?: string; warnings?: string[] };
+export type ReviewCheck = { version: number; content: string; warnings: string[]; status: string };
 export type Member = {
   requestId?: string;
   requestVersion?: number;
@@ -137,7 +139,9 @@ export interface Gateway {
     role: Role,
     source: string,
     language: string,
-  ): Promise<{ text: string; source: string }>;
+  ): Promise<GenerationResult>;
+  transcribe?(session: Session, role: Role, audioBase64: string, language: string): Promise<{ text: string; requiresTranscriptReview: true }>;
+  checkReview?(session: Session, role: Role, id: string, version: number, content: string, reason: string): Promise<ReviewCheck>;
   subscribe(
     session: Session,
     onChange: () => void,

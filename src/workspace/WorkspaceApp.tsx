@@ -9,7 +9,9 @@ import type {
   Session,
   Snapshot,
   Submission,
+  ReviewCheck,
 } from "./model";
+import { blobToBase64, startRecording, toPcmWav, type Recorder } from "../voice";
 import { Brand, Badge, Empty, Heading, Modal } from "./ui";
 import Login from "./Login";
 import "./workspace.css";
@@ -67,6 +69,8 @@ const blankDraft = {
   generated: "",
   final: "",
   generatedSource: "",
+  generationId: undefined as string | undefined,
+  warnings: [] as string[],
   threadId: undefined as string | undefined,
   previousId: undefined as string | undefined,
 };
@@ -108,6 +112,11 @@ export default function WorkspaceApp() {
   const [existingPublication, setExistingPublication] = useState<Publication | null>(null);
   const [sourceChecked, setSourceChecked] = useState(false);
   const [checksChecked, setChecksChecked] = useState(false);
+  const [dataUse, setDataUse] = useState(false);
+  const [transcriptConfirmed, setTranscriptConfirmed] = useState(true);
+  const [recording, setRecording] = useState(false);
+  const recorder = useRef<Recorder | null>(null);
+  const [reviewCheck, setReviewCheck] = useState<ReviewCheck | null>(null);
   const epoch = useRef(0),
     generation = useRef(0),
     readOrder = useRef(0),
@@ -149,6 +158,8 @@ export default function WorkspaceApp() {
     const disconnect = (message?: string) => {
       if (e !== epoch.current) return;
       connected.current = false;
+      generation.current++;
+      recorder.current?.cancel();recorder.current=null;setRecording(false);
       readOrder.current++;
       setOffline(true);
       setData(null);
@@ -181,6 +192,9 @@ export default function WorkspaceApp() {
     window.addEventListener("pageshow", restore);
     document.addEventListener("visibilitychange", visibility);
     return () => {
+      recorder.current?.cancel();
+      recorder.current=null;
+      setRecording(false);
       epoch.current = e + 1;
       connected.current = false;
       stop();
@@ -197,6 +211,8 @@ export default function WorkspaceApp() {
     return () => clearTimeout(id);
   }, [toast]);
   function clearViews() {
+    recorder.current?.cancel();recorder.current=null;setRecording(false);
+    setDataUse(false);setTranscriptConfirmed(true);setReviewCheck(null);
     generation.current++;
     setBusy(false);
     setOffline(false);
@@ -229,6 +245,7 @@ export default function WorkspaceApp() {
     setPage(s.user.role === "reader" ? "publications" : "home");
   }
   function navigate(p: Page) {
+    recorder.current?.cancel();recorder.current=null;setRecording(false);
     setPage(p);
     setMobile(false);
     setQuery("");
@@ -281,7 +298,7 @@ export default function WorkspaceApp() {
     }
   }
   async function generate() {
-    if (!session || busy) return;
+    if (!session || busy || (!isMock && (!dataUse || !transcriptConfirmed))) return;
     const e = epoch.current;
     setRegenerate(false);
     setBusy(true);
@@ -301,6 +318,8 @@ export default function WorkspaceApp() {
           generated: result.text,
           final: result.text,
           generatedSource: result.source,
+          generationId: result.generationId,
+          warnings: result.warnings ?? [],
         }));
       }
     } catch (err) {
@@ -317,6 +336,8 @@ export default function WorkspaceApp() {
       generated: n.generated,
       final: n.final,
       generatedSource: n.source,
+      generationId: n.generationId,
+      warnings: n.warnings ?? [],
       threadId: n.threadId,
       previousId: n.id,
     });
@@ -324,12 +345,43 @@ export default function WorkspaceApp() {
     navigate("compose");
   }
   function openNote(n: Submission) {
+    setReviewCheck(null);
     setSourceChecked(false);
     setChecksChecked(false);
     setSelected(n.id);
     setReview(n.review || n.final);
     setReason(n.reason);
     setReviewVersion(n.version);
+  }
+  async function checkFinal() {
+    if (!session || !note || busy || !gateway.checkReview) return;
+    const e=epoch.current;
+    setBusy(true);setError("");setReviewCheck(null);setChecksChecked(false);
+    try {
+      const result=await gateway.checkReview(session,role,note.id,reviewVersion,review,reason);
+      if(e===epoch.current){setReviewVersion(result.version);setReviewCheck(result);await refresh();}
+    } catch(err) { if(e===epoch.current){if(err instanceof ApiError && err.details?.savedVersion)setReviewVersion(err.details.savedVersion);setError((err as Error).message);await refresh();} }
+    finally {if(e===epoch.current)setBusy(false);}
+  }
+  async function transcribe(blob: Blob) {
+    if(!session || !gateway.transcribe) return;
+    const e=epoch.current,id=++generation.current;
+    setBusy(true);setError("");
+    try {
+      const result=await gateway.transcribe(session,role,await blobToBase64(blob),draft.language);
+      if(e===epoch.current && id===generation.current){
+        setDraft(d=>({...d,source:result.text,generatedSource:"",generationId:undefined}));
+        setTranscriptConfirmed(false);setRequestId(crypto.randomUUID());
+      }
+    } catch(err){if(e===epoch.current)setError((err as Error).message);}
+    finally{if(e===epoch.current)setBusy(false);}
+  }
+  async function record() {
+    if(recording && recorder.current){const activeRecorder=recorder.current;recorder.current=null;setRecording(false);try{await transcribe((await activeRecorder.stop()).blob);}catch(err){setError((err as Error).message);}return;}
+    const e=epoch.current;setBusy(true);setError("");
+    try{const next=await startRecording();if(e!==epoch.current){next.cancel();return;}recorder.current=next;setRecording(true);}
+    catch(err){if(e===epoch.current)setError((err as Error).message);}
+    finally{if(e===epoch.current)setBusy(false);}
   }
   function openPublish(n: Submission, existing?: Publication) {
     setExistingPublication(existing ?? pubs.find(p=>p.submissionId===n.id && p.state!=="published") ?? null);
@@ -526,7 +578,6 @@ export default function WorkspaceApp() {
           </div>
         )}
         <main className="cb-content">
-          {!isMock && <div className="cb-notice">AI 생성·검사는 아직 연결하지 않았습니다. 기존 기록과 그룹 관리부터 연결 중이며, 신규 생성 및 검사 결과가 필요한 확정은 제한될 수 있습니다.</div>}
           {error && (
             <div className="cb-error" role="alert">
               {error}
@@ -869,9 +920,23 @@ export default function WorkspaceApp() {
                           {draft.source.length.toLocaleString()} / 4,000
                         </span>
                       </div>
+                      {!isMock && <>
+                        <label><input type="checkbox" checked={dataUse} onChange={e=>setDataUse(e.target.checked)} /> 실제 개인정보가 없는 연습용 메모·음성임을 확인했습니다.</label>
+                        <div className="cb-modal-actions">
+                          <button className="cb-secondary" disabled={busy || !dataUse} onClick={()=>void record()}>{recording?"녹음 중지 · 받아쓰기":"음성 메모 녹음"}</button>
+                          <label>음성 파일 선택<input type="file" accept="audio/*,.wav,.webm,.mp3,.m4a" disabled={busy || recording || !dataUse} onChange={async e=>{
+                            const file=e.target.files?.[0];e.target.value="";if(!file)return;
+                            const epochAtStart=epoch.current;setBusy(true);setError("");
+                            try{if(file.size>10*1024*1024)throw new Error("음성 파일은 10MB 이하로 선택해 주세요.");const wav=await toPcmWav(file);if(epochAtStart===epoch.current)await transcribe(wav);}
+                            catch(err){if(epochAtStart===epoch.current)setError((err as Error).message);}
+                            finally{if(epochAtStart===epoch.current)setBusy(false);}
+                          }} /></label>
+                        </div>
+                        {!transcriptConfirmed && <label><input type="checkbox" checked={transcriptConfirmed} onChange={e=>setTranscriptConfirmed(e.target.checked)} /> 받아쓴 원문을 확인하고 필요한 부분을 수정했습니다.</label>}
+                      </>}
                       <button
                         className="cb-primary"
-                        disabled={busy || !draft.source.trim() || !isMock}
+                        disabled={busy || recording || !draft.source.trim() || (!isMock && (!dataUse || !transcriptConfirmed))}
                         onClick={() =>
                           draft.generated
                             ? setRegenerate(true)
@@ -890,6 +955,7 @@ export default function WorkspaceApp() {
                             <h2>초안 확인 · 수정</h2>
                             <Badge status="pending" />
                           </div>
+                          {(draft.warnings ?? []).length>0 && <div className="cb-notice"><b>초안 확인사항</b>{draft.warnings.map((w,i)=><p key={i}>{w}</p>)}</div>}
                           {draft.generatedSource !== draft.source && (
                             <div className="cb-notice">
                               원문 또는 언어가 변경됐습니다. 초안을 다시 생성해
@@ -930,6 +996,7 @@ export default function WorkspaceApp() {
                               busy ||
                               !draft.subjectId ||
                               !draft.final.trim() ||
+                              recording || (!isMock && (!dataUse || !transcriptConfirmed || !draft.generationId)) ||
                               draft.generatedSource !== draft.source
                             }
                             onClick={async () => {
@@ -1571,14 +1638,14 @@ export default function WorkspaceApp() {
               {!isMock && <div className="cb-notice">
                 <label><input type="checkbox" checked={sourceChecked} onChange={e=>setSourceChecked(e.target.checked)} /> 원문을 대조했습니다.</label>
                 <label><input type="checkbox" checked={checksChecked} onChange={e=>setChecksChecked(e.target.checked)} /> 확인사항과 경고를 확인했습니다. 경고가 있어도 확정할 수 있습니다.</label>
-                최종 내용에 연결된 검사 결과가 없으면 서버가 확정을 거절합니다. 이번 단계에서는 AI 검사를 새로 실행하지 않습니다.
+                최종 내용을 검사한 뒤 확인사항을 검토해 주세요. 수정 후에는 다시 검사해야 합니다.
               </div>}
               <label>
                 검토 내용
                 <textarea
                   rows={5}
                   value={review}
-                  onChange={(e) => setReview(e.target.value)}
+                  onChange={(e) => {setReview(e.target.value);setReviewCheck(null);setChecksChecked(false);}}
                 />
               </label>
               <label>
@@ -1590,6 +1657,10 @@ export default function WorkspaceApp() {
                   onChange={(e) => setReason(e.target.value)}
                 />
               </label>
+              {!isMock && <>
+                <button className="cb-secondary" disabled={busy || !review.trim()} onClick={()=>void checkFinal()}>최종 내용 저장 · AI 검사</button>
+                {reviewCheck && <div className="cb-notice"><b>{reviewCheck.status==="hold"?"확인이 필요한 검사 결과입니다":"최종 내용 검사를 마쳤습니다"}</b>{reviewCheck.warnings.length?reviewCheck.warnings.map((w,i)=><p key={i}>{w}</p>):<p>추가 경고가 없습니다. 원문과 내용을 직접 확인해 주세요.</p>}</div>}
+              </>}
               <div className="cb-modal-actions">
                 {(["held", "pending", "confirmed"] as const).map((s) => (
                   <button
@@ -1597,7 +1668,7 @@ export default function WorkspaceApp() {
                     className={
                       s === "confirmed" ? "cb-primary" : "cb-secondary"
                     }
-                    disabled={busy || !review.trim() || (!isMock && s === "confirmed" && (!sourceChecked || !checksChecked))}
+                    disabled={busy || !review.trim() || (!isMock && s === "confirmed" && (!sourceChecked || !checksChecked || reviewCheck?.content!==review || reviewCheck?.version!==reviewVersion))}
                     onClick={() =>
                       void action(
                         {

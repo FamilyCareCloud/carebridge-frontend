@@ -1,12 +1,12 @@
-import type { Command, Gateway, Role, Session, Snapshot, Transfer, User } from "./model";
+import type { Command, Gateway, GenerationResult, ReviewCheck, Role, Session, Snapshot, Transfer, User } from "./model";
 import { MockGateway } from "./mock";
 import { subscribeWorkspace } from "./realtime";
 
 export class ApiError extends Error {
   status: number;
   code: string;
-  details?: { confirmationRequired?: boolean };
-  constructor(message: string, status = 0, code = "", details?: { confirmationRequired?: boolean }) { super(message); this.status=status; this.code=code; this.details=details; }
+  details?: { confirmationRequired?: boolean; savedVersion?: number };
+  constructor(message: string, status = 0, code = "", details?: { confirmationRequired?: boolean; savedVersion?: number }) { super(message); this.status=status; this.code=code; this.details=details; }
 }
 type ApiUser = { userId: string; name: string; role: string; workspaceRole?: string; isTestAdmin?: boolean; qaRole?: string };
 export type WorkspaceRow = { workspaceId: string; name: string; status: string; role: string; request?: JoinRequest; transfers?: ApiTransfer[] };
@@ -21,7 +21,7 @@ type ApiSubmission = {
   generatedDraft: { translation: { text: string }; source: { language: string }; qa?: ApiQa };
   reviewContent?: string; reviews: { reason: string; at: string }[];
   status: "review_pending" | "held" | "confirmed"; version: number; submittedAt: string;
-  finalQa?: { qa: ApiQa };
+  finalQa?: { qa: { qa: ApiQa } };
 };
 type ApiPublication = { publicationId: string; submissionId?: string; subject: ApiSubject; content: string; recipientIds?: string[]; status?: "published" | "revoked" | "unpublished" | "blocked"; publishedAt?: string; version: number };
 type AuditPage = { items: { eventId: string; action: string; at: string; actorNameAtEvent?: string; actorCurrentName?: string; actorId: string; reason?: string }[]; nextCursor: string | null };
@@ -40,7 +40,7 @@ function transferOf(t: ApiTransfer, w: WorkspaceRow, incoming: boolean): Transfe
   return { id: t.transferId, workspaceId: w.workspaceId, workspaceName: w.name, targetId: t.targetUserId, targetName: t.targetNameAtRequest || t.targetCurrentName || t.targetUserId, status: t.status, version: t.version, incoming };
 }
 
-/** REST contract: backend develop ac8ded5. AI endpoints intentionally not invoked. */
+/** AI requests use the authenticated workspace backend; service keys never enter the browser. */
 export class HttpGateway implements Gateway {
   mode = "api" as const;
   private base: string;
@@ -111,7 +111,7 @@ export class HttpGateway implements Gateway {
           subjectId:s.subject.subjectId,source:s.memo,language:s.generatedDraft.source.language,generated:s.generatedDraft.translation.text,
           final:s.authorDraft,review:s.reviewContent ?? "",reason:s.reviews.at(-1)?.reason ?? "",
           status:s.status==="review_pending"?"pending":s.status,createdAt:s.submittedAt,reviewedAt:s.reviews.at(-1)?.at,version:s.version,
-          generationId:s.generationId,warnings:(s.finalQa?.qa ?? s.generatedDraft.qa)?.issues?.map(i=>i.message) ?? []});
+          generationId:s.generationId,warnings:(s.finalQa?.qa.qa ?? s.generatedDraft.qa)?.issues?.map(i=>i.message) ?? []});
       }
     }
     if(role !== "author") {
@@ -160,7 +160,7 @@ export class HttpGateway implements Gateway {
       case "submit": {
         const previous=data.submissions.find(s=>s.id===c.previousId);
         const generationId=c.generationId ?? previous?.generationId;
-        if(!generationId || (previous && previous.source!==c.source)) throw new ApiError("현재 원문에 연결된 생성본이 필요합니다. AI 연결은 아직 준비 중입니다.");
+        if(!generationId || (previous && previous.source!==c.source && !c.generationId)) throw new ApiError("현재 원문으로 초안을 다시 생성해 주세요.");
         await this.request(path+"/submissions",{requestId:c.requestId,subjectId:c.subjectId,generationId,memo:c.source,authorDraft:c.final,confirmSource:true,...(c.previousId?{parentSubmissionId:c.previousId}:{})},session);break;
       }
       case "review": await this.request(path+"/submissions/"+encode(c.id)+"/review",{
@@ -192,8 +192,32 @@ export class HttpGateway implements Gateway {
       case "transfer": await this.request(path+"/transfers",{expectedVersion:data.revision,targetUserId:c.userId},session);break;
     }
   }
-  async generate(): Promise<{text:string;source:string}> {
-    throw new ApiError("AI 초안 생성은 아직 연결하지 않았습니다. 기존 기록 조회와 그룹 관리 기능을 먼저 이용해 주세요.");
+  private aiPath(session: Session, role: Role, expected: Role) {
+    const data=this.snapshots.get(session.token);
+    if (role!==expected || !data?.workspace || data.membership?.status!=="active" || this.proofs.get(session.token)!==data.workspace.id) throw new ApiError("현재 작업 그룹의 권한을 다시 확인해 주세요.",403,"WORKSPACE_ACCESS_REQUIRED");
+    return "/workspaces/"+encode(data.workspace.id);
+  }
+  async generate(session: Session, role: Role, source: string, language: string): Promise<GenerationResult> {
+    const path=this.aiPath(session,role,"author");
+    const result=await this.request<{generationId:string;draft:{source:{text:string};translation:{text:string};qa:ApiQa}}>(path+"/drafts",{memo:source,sourceLanguage:language,dataUse:"synthetic_deidentified"},session);
+    if (!result.generationId || result.draft?.source?.text!==source || !result.draft.translation?.text?.trim()) throw new ApiError("원문에 연결된 초안 응답을 확인하지 못했습니다.",502,"CAREBRIDGE_BAD_RESPONSE");
+    return {text:result.draft.translation.text,source,generationId:result.generationId,warnings:result.draft.qa?.issues?.map(i=>i.message) ?? []};
+  }
+  async transcribe(session: Session, role: Role, audioBase64: string, language: string) {
+    const path=this.aiPath(session,role,"author");
+    const result=await this.request<{text:string;requiresTranscriptReview:true}>(path+"/transcriptions",{audioBase64,sourceLanguage:language,dataUse:"synthetic_deidentified"},session);
+    if (!result.text?.trim() || result.requiresTranscriptReview!==true) throw new ApiError("음성 인식 결과를 확인하지 못했습니다.",502,"CAREBRIDGE_BAD_RESPONSE");
+    return result;
+  }
+  async checkReview(session: Session, role: Role, id: string, version: number, content: string, reason: string): Promise<ReviewCheck> {
+    const path=this.aiPath(session,role,"reviewer")+"/submissions/"+encode(id);
+    const saved=await this.request<{version:number}>(path+"/review",{expectedVersion:version,decision:"edit",content,...(reason.trim()?{reason}:{})},session);
+    try {
+      const result=await this.request<{version:number;qa:{status:string;qa:ApiQa}}>(path+"/check",{expectedVersion:saved.version},session);
+      return {version:saved.version,content,status:result.qa.status,warnings:result.qa.qa.issues?.map(i=>i.message) ?? []};
+    } catch(error) {
+      throw new ApiError((error as Error).message,error instanceof ApiError?error.status:0,error instanceof ApiError?error.code:"",{savedVersion:saved.version});
+    }
   }
   subscribe(session: Session,onChange:()=>void,onDisconnect:()=>void,onConnected:()=>void) {
     return subscribeWorkspace({

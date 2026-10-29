@@ -104,11 +104,46 @@ describe("latest backend REST adapter",()=>{
   await api.execute(session,"reviewer",command);
   expect(creates).toBe(1);expect(publishes).toBe(2);
  });
- it("makes no AI call and preserves FINAL_QA_REQUIRED instead of invoking check",async()=>{
+ it("requires explicit checking and preserves FINAL_QA_REQUIRED on confirmation",async()=>{
   stream=undefined!;const fetcher=setup();const api=new HttpGateway("https://api.example");await connect(api);await api.snapshot(session,"reviewer");
-  await expect(api.generate()).rejects.toThrow("아직 연결");
   fetcher.mockResolvedValue(json({error:"유효한 QA 필요",code:"FINAL_QA_REQUIRED"},409));
   await expect(api.execute(session,"reviewer",{type:"review",id:"n",version:3,content:"초안",reason:"",status:"confirmed"})).rejects.toBeInstanceOf(ApiError);
   expect(fetcher.mock.calls.some(x=>/\/(check|drafts|transcriptions)$/.test(String(x[0])))).toBe(false);
+ });
+ it("creates a source-bound generation through the backend and submits its ID",async()=>{
+  stream=undefined!;const fetcher=setup("author");const api=new HttpGateway("https://api.example");await connect(api);await api.snapshot(session,"author");
+  const original=fetcher.getMockImplementation()!;
+  fetcher.mockImplementation(async(input,init)=>String(input).endsWith("/drafts")?json({generationId:"new-generation",draft:{source:{text:"Drank juice."},translation:{text:"주스를 마셨습니다."},qa:{issues:[{message:"원문 대조"}]}}}):original(input,init));
+  const result=await api.generate(session,"author","Drank juice.","en");
+  expect(result).toEqual({generationId:"new-generation",source:"Drank juice.",text:"주스를 마셨습니다.",warnings:["원문 대조"]});
+  expect(fetcher).toHaveBeenLastCalledWith("https://api.example/workspaces/w/drafts",expect.objectContaining({body:JSON.stringify({memo:"Drank juice.",sourceLanguage:"en",dataUse:"synthetic_deidentified"})}));
+  await api.execute(session,"author",{type:"submit",subjectId:"s",source:result.source,generated:result.text,final:result.text,language:"en",requestId:"r",generationId:result.generationId});
+  expect(JSON.parse(fetcher.mock.calls.at(-1)![1]!.body as string).generationId).toBe("new-generation");
+  expect(fetcher.mock.calls.every(([url])=>String(url).startsWith("https://api.example/"))).toBe(true);
+ });
+ it("rejects generation without current workspace proof and retains AI errors",async()=>{
+  const fetcher=setup();const api=new HttpGateway("https://api.example");
+  await expect(api.generate(session,"author","memo","en")).rejects.toMatchObject({code:"WORKSPACE_ACCESS_REQUIRED"});
+  expect(fetcher).not.toHaveBeenCalled();
+  stream=undefined!;setup("author");await connect(api);await api.snapshot(session,"author");
+  vi.mocked(fetch).mockResolvedValue(json({error:"AI 일시 중단",code:"CAREBRIDGE_UNAVAILABLE"},503));
+  await expect(api.generate(session,"author","memo","en")).rejects.toMatchObject({status:503,code:"CAREBRIDGE_UNAVAILABLE"});
+ });
+ it("saves the edited final content then checks that version without auto-confirming",async()=>{
+  stream=undefined!;const fetcher=setup();const api=new HttpGateway("https://api.example");await connect(api);await api.snapshot(session,"reviewer");
+  fetcher.mockImplementation(async(input)=>String(input).endsWith("/review")?json({version:4}):json({version:4,qa:{status:"hold",qa:{issues:[{message:"수량 대조 필요"}]}}}));
+  expect(await api.checkReview(session,"reviewer","n",3,"수정한 최종본","대조")).toEqual({version:4,content:"수정한 최종본",status:"hold",warnings:["수량 대조 필요"]});
+  expect(fetcher.mock.calls.slice(-2).map(c=>JSON.parse(c[1]!.body as string))).toEqual([{expectedVersion:3,decision:"edit",content:"수정한 최종본",reason:"대조"},{expectedVersion:4}]);
+ });
+ it("returns the saved version when QA fails so the editor can retry",async()=>{
+  stream=undefined!;const fetcher=setup();const api=new HttpGateway("https://api.example");await connect(api);await api.snapshot(session,"reviewer");
+  fetcher.mockImplementation(async(input)=>String(input).endsWith("/review")?json({version:4}):json({error:"AI 장애",code:"CAREBRIDGE_AI_FAILED"},502));
+  await expect(api.checkReview(session,"reviewer","n",3,"보존할 편집본","")).rejects.toMatchObject({code:"CAREBRIDGE_AI_FAILED",details:{savedVersion:4}});
+ });
+ it("connects editable transcription through the same workspace backend",async()=>{
+  stream=undefined!;const fetcher=setup("author");const api=new HttpGateway("https://api.example");await connect(api);await api.snapshot(session,"author");
+  fetcher.mockResolvedValue(json({text:"Drank water.",requiresTranscriptReview:true}));
+  expect((await api.transcribe(session,"author","UklGRg==","en")).requiresTranscriptReview).toBe(true);
+  expect(JSON.parse(fetcher.mock.calls.at(-1)![1]!.body as string)).toEqual({audioBase64:"UklGRg==",sourceLanguage:"en",dataUse:"synthetic_deidentified"});
  });
 });
