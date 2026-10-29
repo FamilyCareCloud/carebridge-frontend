@@ -131,7 +131,7 @@ describe("latest backend REST adapter",()=>{
  });
  it("saves the edited final content then checks that version without auto-confirming",async()=>{
   stream=undefined!;const fetcher=setup();const api=new HttpGateway("https://api.example");await connect(api);await api.snapshot(session,"reviewer");
-  fetcher.mockImplementation(async(input)=>String(input).endsWith("/review")?json({version:4}):json({version:4,qa:{status:"hold",qa:{issues:[{message:"수량 대조 필요"}]}}}));
+  fetcher.mockImplementation(async(input)=>String(input).endsWith("/review")?json({version:4}):json({version:4,qa:{checks:[{code:"SEMANTIC_OMITTED_FACTS",passed:false}],issues:[{message:"수량 대조 필요",severity:"hold"}]}}));
   expect(await api.checkReview(session,"reviewer","n",3,"수정한 최종본","대조")).toEqual({version:4,content:"수정한 최종본",status:"hold",warnings:["수량 대조 필요"]});
   expect(fetcher.mock.calls.slice(-2).map(c=>JSON.parse(c[1]!.body as string))).toEqual([{expectedVersion:3,decision:"edit",content:"수정한 최종본",reason:"대조"},{expectedVersion:4}]);
  });
@@ -139,6 +139,12 @@ describe("latest backend REST adapter",()=>{
   stream=undefined!;const fetcher=setup();const api=new HttpGateway("https://api.example");await connect(api);await api.snapshot(session,"reviewer");
   fetcher.mockImplementation(async(input)=>String(input).endsWith("/review")?json({version:4}):json({error:"AI 장애",code:"CAREBRIDGE_AI_FAILED"},502));
   await expect(api.checkReview(session,"reviewer","n",3,"보존할 편집본","")).rejects.toMatchObject({code:"CAREBRIDGE_AI_FAILED",details:{savedVersion:4}});
+ });
+ it("loads the normalized final QA warnings from the actual backend contract",async()=>{
+  stream=undefined!;const fetcher=setup();const original=fetcher.getMockImplementation()!;
+  fetcher.mockImplementation(async(input,init)=>String(input).endsWith("/submissions/n")?json({...note,finalQa:{qa:{checks:[{code:"SEMANTIC_OMITTED_FACTS",passed:false}],issues:[{message:"최종본 대상 확인",severity:"hold"}]}}}):original(input,init));
+  const api=new HttpGateway("https://api.example");await connect(api);
+  expect((await api.snapshot(session,"reviewer")).submissions[0].warnings).toEqual(["최종본 대상 확인"]);
  });
  it("connects editable transcription through the same workspace backend",async()=>{
   stream=undefined!;const fetcher=setup("author");const api=new HttpGateway("https://api.example");await connect(api);await api.snapshot(session,"author");

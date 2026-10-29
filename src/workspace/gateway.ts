@@ -13,7 +13,7 @@ export type WorkspaceRow = { workspaceId: string; name: string; status: string; 
 type JoinRequest = { requestId: string; userId: string; name: string; role: string; status: string; version: number; requestedAt: string };
 type ApiTransfer = { transferId: string; targetUserId: string; targetNameAtRequest?: string; targetCurrentName?: string; status: string; version: number };
 type ApiSubject = { subjectId: string; name: string; managementNumber: number; memo?: string };
-type ApiQa = { issues?: { message: string }[] };
+type ApiQa = { checks?: {code:string;passed:boolean}[]; issues?: { message: string; severity?:string }[] };
 type ApiSubmission = {
   submissionId: string; threadId: string; parentSubmissionId?: string; authorId: string;
   authorNameAtSubmission?: string; authorCurrentName?: string; subject: ApiSubject;
@@ -21,7 +21,7 @@ type ApiSubmission = {
   generatedDraft: { translation: { text: string }; source: { language: string }; qa?: ApiQa };
   reviewContent?: string; reviews: { reason: string; at: string }[];
   status: "review_pending" | "held" | "confirmed"; version: number; submittedAt: string;
-  finalQa?: { qa: { qa: ApiQa } };
+  finalQa?: { qa: ApiQa };
 };
 type ApiPublication = { publicationId: string; submissionId?: string; subject: ApiSubject; content: string; recipientIds?: string[]; status?: "published" | "revoked" | "unpublished" | "blocked"; publishedAt?: string; version: number };
 type AuditPage = { items: { eventId: string; action: string; at: string; actorNameAtEvent?: string; actorCurrentName?: string; actorId: string; reason?: string }[]; nextCursor: string | null };
@@ -111,7 +111,7 @@ export class HttpGateway implements Gateway {
           subjectId:s.subject.subjectId,source:s.memo,language:s.generatedDraft.source.language,generated:s.generatedDraft.translation.text,
           final:s.authorDraft,review:s.reviewContent ?? "",reason:s.reviews.at(-1)?.reason ?? "",
           status:s.status==="review_pending"?"pending":s.status,createdAt:s.submittedAt,reviewedAt:s.reviews.at(-1)?.at,version:s.version,
-          generationId:s.generationId,warnings:(s.finalQa?.qa.qa ?? s.generatedDraft.qa)?.issues?.map(i=>i.message) ?? []});
+          generationId:s.generationId,warnings:(s.finalQa?.qa ?? s.generatedDraft.qa)?.issues?.map(i=>i.message) ?? []});
       }
     }
     if(role !== "author") {
@@ -213,9 +213,10 @@ export class HttpGateway implements Gateway {
     const path=this.aiPath(session,role,"reviewer")+"/submissions/"+encode(id);
     const saved=await this.request<{version:number}>(path+"/review",{expectedVersion:version,decision:"edit",content,...(reason.trim()?{reason}:{})},session);
     try {
-      const result=await this.request<{version:number;qa:{status:string;qa:ApiQa}}>(path+"/check",{expectedVersion:saved.version},session);
-      if (result.version!==saved.version || !["hold","review_required"].includes(result.qa?.status) || !Array.isArray(result.qa?.qa?.issues)) throw new ApiError("최종 검사 응답의 버전·형식을 확인하지 못했습니다.",502,"CAREBRIDGE_BAD_RESPONSE");
-      return {version:saved.version,content,status:result.qa.status,warnings:result.qa.qa.issues?.map(i=>i.message) ?? []};
+      const result=await this.request<{version:number;qa:ApiQa}>(path+"/check",{expectedVersion:saved.version},session);
+      if (result.version!==saved.version || !Array.isArray(result.qa?.checks) || !Array.isArray(result.qa?.issues)) throw new ApiError("최종 검사 응답의 버전·형식을 확인하지 못했습니다.",502,"CAREBRIDGE_BAD_RESPONSE");
+      const hold=result.qa.checks.some(c=>c.passed===false)||result.qa.issues.some(i=>i.severity==="hold");
+      return {version:saved.version,content,status:hold?"hold":"review_required",warnings:result.qa.issues.map(i=>i.message)};
     } catch(error) {
       throw new ApiError((error as Error).message,error instanceof ApiError?error.status:0,error instanceof ApiError?error.code:"",{savedVersion:saved.version});
     }
