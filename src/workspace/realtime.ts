@@ -16,18 +16,28 @@ export function subscribeWorkspace(o: Options): ()=>void {
   let renewal:ReturnType<typeof setInterval>|undefined;
   let validated=false;
   let verifiedState:string|undefined;
-  function clear() {clearTimeout(deadline);clearTimeout(poll);clearInterval(renewal);}
+  let verifiedRole: string | undefined;
+  let expiresAt = 0;
+  let focusCheck = () => {};
+  const onFocus = () => { if(expiresAt && Date.now()>=expiresAt) fail('접근 확인 유효시간이 지났습니다. 다시 연결해 주세요.'); else focusCheck(); };
+  const onVisible = () => { if(!document.hidden) onFocus(); };
+  window.addEventListener('focus', onFocus);
+  document.addEventListener('visibilitychange', onVisible);
+  function clear() {clearTimeout(deadline);clearTimeout(poll);clearInterval(renewal);window.removeEventListener('focus',onFocus);document.removeEventListener('visibilitychange',onVisible);}
   function stop() {clear();controller.abort();socket?.close();o.proof(null);}
   function fail(message="실시간 접근 확인 연결이 종료되었습니다.",status?:number) {
     if(controller.signal.aborted) return;
     stop();o.onDisconnect(message,status);
   }
   function arm(ms:number) {
+    expiresAt=Date.now()+ms;
     clearTimeout(deadline);
     deadline=setTimeout(()=>fail("접근 확인 유효시간이 지났습니다. 다시 연결해 주세요."),ms);
   }
   function verified(id:string, revision?:unknown, role?:unknown) {
     if(controller.signal.aborted) return;
+    if(verifiedRole && typeof role==='string' && verifiedRole!==role) {fail('서버 역할이 변경되었습니다. 다시 로그인해 주세요.',403);return;}
+    if(typeof role==='string') verifiedRole=role;
     const state=typeof revision==="number" && Number.isSafeInteger(revision) && revision>=0 && typeof role==="string" && role.length>0
       ? JSON.stringify([revision,role]) : undefined;
     const unchanged=state!==undefined && state===verifiedState;
@@ -51,7 +61,6 @@ export function subscribeWorkspace(o: Options): ()=>void {
       while(!controller.signal.aborted) {
         const {done,value}=await reader.read();
         if(done) throw new Error("실시간 연결이 종료되었습니다.");
-        arm(45000);
         pending+=decoder.decode(value,{stream:true});
         pending=pending.replace(/\r\n/g,"\n");
         let end:number;
@@ -59,7 +68,7 @@ export function subscribeWorkspace(o: Options): ()=>void {
           const frame=pending.slice(0,end);pending=pending.slice(end+2);
           if(frame.startsWith(":")) continue;
           if(frame.includes("event: access-revoked")) {fail("작업 그룹 접근 권한이 종료되었습니다.");return;}
-          if(frame.includes("event: revalidate")) verified(w.workspaceId);
+          if(frame.includes("event: revalidate")) {arm(45000);verified(w.workspaceId);}
           else if(frame.split("\n").some(line=>line.startsWith("data:")) && validated) o.onChange();
         }
       }
@@ -82,8 +91,13 @@ export function subscribeWorkspace(o: Options): ()=>void {
       try {
         const proof=await o.request<Ticket>(ticketPath,{},controller.signal);
         if(!controller.signal.aborted && socket?.readyState===WebSocket.OPEN) socket.send(JSON.stringify({action:"revalidate",ticket:proof.ticket}));
-      } catch(e) {fail((e as Error).message,(e as {status?:number}).status);} finally {renewing=false;}
+      } catch(e) {
+        const status=(e as {status?:number}).status;
+        if(!validated || status===401 || status===403) fail((e as Error).message,status);
+        // A transient failure cannot extend the last authenticated deadline.
+      } finally {renewing=false;}
     }
+    focusCheck=()=>{void revalidate();};
     socket.onopen=()=>{
       void revalidate();
       renewal=setInterval(()=>void revalidate(),Math.min(20,Math.max(1,ticket.heartbeatSeconds))*1000);
@@ -102,8 +116,8 @@ export function subscribeWorkspace(o: Options): ()=>void {
         // heartbeat deliberately does not renew authorization.
       } catch(e) {fail((e as Error).message);}
     };
-    socket.onerror=()=>fail("실시간 연결에 실패했습니다. 배포 설정과 허용 출처를 확인해 주세요.");
-    socket.onclose=()=>fail();
+    socket.onerror=()=>{if(!validated)fail("실시간 연결에 실패했습니다. 배포 설정과 허용 출처를 확인해 주세요.");};
+    socket.onclose=()=>{clearInterval(renewal);if(!validated)fail();};
   }
   let previous="";
   async function discover() {

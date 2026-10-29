@@ -1,7 +1,9 @@
+import { t, useLocale } from './i18n';
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { statusNames } from "./model";
 export function Brand() {
+  useLocale();
   return (
     <div className="cb-brand">
       <svg viewBox="0 0 42 40" fill="none" aria-hidden="true">
@@ -13,26 +15,27 @@ export function Brand() {
         />
       </svg>
       <span>
-        CareBridge<small>케어브릿지</small>
+        CareBridge<small>{t("케어브릿지")}</small>
       </span>
     </div>
   );
 }
 export function Badge({ status }: { status: string }) {
+  useLocale();
   return (
     <span className={`cb-badge ${status}`}>
-      {(
+      {t((
         {
           ...statusNames,
-          active: "참여 중",
-          rejected: "거절",
-          removed: "퇴출",
-          published: "공개 중",
-          revoked: "열람 차단",
-          unpublished: "공개 준비",
-          blocked: "정정 중 · 열람 차단",
+          active: t("참여 중"),
+          rejected: t("거절"),
+          removed: t("퇴출"),
+          published: t("공개 중"),
+          revoked: t("열람 차단"),
+          unpublished: t("공개 준비"),
+          blocked: t("정정 중 · 열람 차단"),
         } as Record<string, string>
-      )[status] || status}
+      )[status] || status)}
     </span>
   );
 }
@@ -65,7 +68,7 @@ export function Heading({
   return (
     <div className="cb-page-heading">
       <div>
-        <span className="cb-eyebrow">{eyebrow}</span>
+        <span className="cb-eyebrow">{t(eyebrow)}</span>
         <h1>{title}</h1>
         <p>{children}</p>
       </div>
@@ -127,7 +130,7 @@ export function Modal({
       >
         <div className="cb-modal-title">
           <h2>{title}</h2>
-          <button className="cb-icon" aria-label="닫기" onClick={close}>
+          <button className="cb-icon" aria-label={t("닫기")} onClick={close}>
             ×
           </button>
         </div>

@@ -1,3 +1,4 @@
+import { getLocale } from './i18n';
 export type Role = "author" | "reviewer" | "reader";
 export type Status = "pending" | "held" | "confirmed";
 export type User = { id: string; name: string; role: Role; admin?: boolean };
@@ -48,10 +49,12 @@ export type Publication = {
   recipients: string[];
   state: "published" | "revoked" | "unpublished" | "blocked";
   publishedAt: string;
+  recordedAt?: string;
   version: number;
 };
 export type Audit = {
   id: string;
+  action?: string;
   text: string;
   at: string;
   actor: string;
@@ -120,6 +123,7 @@ export type Command =
   | { type: "transfer"; userId: string }
   | { type: "acceptTransfer" | "cancelTransfer"; workspaceId: string; id: string; version: number };
 export interface Gateway {
+  restoreSession?(): Promise<Session | null>;
   logout?(session: Session): Promise<void>;
   selectRole?(session: Session, role: Role): Promise<Session>;
   confirmEmail?(email: string, code: string): Promise<void>;
@@ -160,7 +164,7 @@ export const statusNames: Record<Status, string> = {
   confirmed: "검토 완료",
 };
 export const stamp = (value: string) =>
-  !value || Number.isNaN(Date.parse(value)) ? "—" : new Intl.DateTimeFormat("ko-KR", {
+  !value || Number.isNaN(Date.parse(value)) ? "—" : new Intl.DateTimeFormat({ko:'ko-KR',en:'en-US',vi:'vi-VN',id:'id-ID'}[getLocale()], {
     month: "long",
     day: "numeric",
     hour: "2-digit",

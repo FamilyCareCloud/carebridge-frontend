@@ -1,6 +1,7 @@
 import type { Command, Gateway, GenerationResult, ReviewCheck, Role, Session, Snapshot, Transfer, User } from "./model";
-import { MockGateway } from "./mock";
+import { PreviewGateway } from "./mock";
 import { subscribeWorkspace } from "./realtime";
+import { auditLabel } from './audit';
 
 export class ApiError extends Error {
   status: number;
@@ -27,7 +28,7 @@ type ApiSubmission = {
   status: "review_pending" | "held" | "confirmed"; version: number; submittedAt: string;
   finalQa?: { qa: ApiQa };
 };
-type ApiPublication = { publicationId: string; submissionId?: string; subject: ApiSubject; content: string; recipientIds?: string[]; status?: "published" | "revoked" | "unpublished" | "blocked"; publishedAt?: string; version: number };
+type ApiPublication = { publicationId: string; submissionId?: string; subject: ApiSubject; content: string; recipientIds?: string[]; status?: "published" | "revoked" | "unpublished" | "blocked"; publishedAt?: string; recordedAt?: string | null; version: number };
 type AuditPage = { items: { eventId: string; action: string; at: string; actorNameAtEvent?: string; actorCurrentName?: string; actorId: string; reason?: string }[]; nextCursor: string | null };
 const encode = encodeURIComponent;
 const serverRole = (role: Role) => role === "reader" ? "viewer" : role;
@@ -52,6 +53,40 @@ export class HttpGateway implements Gateway {
   private proofs = new Map<string, string>();
   private renewals = new WeakMap<Session, Promise<void>>();
   private ended = new WeakSet<Session>();
+  private remembered?: Session;
+  private get sessionKey() { return `carebridge.auth.v1:${this.base}`; }
+  private remember(session: Session) {
+    this.remembered = session;
+    try { sessionStorage.setItem(this.sessionKey, JSON.stringify(session)); } catch { /* Storage unavailable: this tab can still use its in-memory session. */ }
+  }
+  private forget(session: Session) {
+    if (this.remembered !== session) return;
+    this.remembered = undefined;
+    try { sessionStorage.removeItem(this.sessionKey); } catch { /* Storage may be disabled. */ }
+  }
+  async restoreSession(): Promise<Session | null> {
+    let stored: Session;
+    try {
+      const raw = sessionStorage.getItem(this.sessionKey);
+      if (!raw) return null;
+      stored = JSON.parse(raw);
+      if (!stored || typeof stored.token !== 'string' || !stored.token || !stored.user || typeof stored.user.id !== 'string'
+        || (stored.refreshToken !== undefined && typeof stored.refreshToken !== 'string')
+        || (stored.expiresAt !== undefined && !Number.isFinite(Date.parse(stored.expiresAt)))) throw new Error('Invalid stored session');
+    } catch { try { sessionStorage.removeItem(this.sessionKey); } catch { /* disabled storage */ } return null; }
+    this.remembered = stored;
+    try {
+      // Stored identity and role are never trusted without server validation.
+      const user = userOf(await this.request<ApiUser>('/me', undefined, stored));
+      if (user.id !== stored.user.id) throw new ApiError('다시 로그인해 주세요.', 401, 'SESSION_INVALID');
+      stored.user = user;
+      this.remember(stored);
+      return stored;
+    } catch (error) {
+      if (error instanceof ApiError && [401,403].includes(error.status)) this.forget(stored);
+      throw error;
+    }
+  }
   constructor(base: string) { this.base = base.replace(/\/$/, ""); }
   private async renew(session: Session): Promise<void> {
     if (this.ended.has(session) || !session.refreshToken) throw new ApiError("다시 로그인해 주세요.",401,"SESSION_INVALID");
@@ -71,11 +106,13 @@ export class HttpGateway implements Gateway {
         this.snapshots.delete(old);this.proofs.delete(old);
         session.token=result.accessToken;session.expiresAt=result.expiresAt;
         if(result.refreshToken) session.refreshToken=result.refreshToken;
+        if(this.remembered===session) this.remember(session);
         if(snapshot)this.snapshots.set(session.token,snapshot);
         if(proof)this.proofs.set(session.token,proof);
       } catch(error) {
         if(error instanceof ApiError && error.status===401) {
           this.ended.add(session);this.snapshots.delete(session.token);this.proofs.delete(session.token);
+          this.forget(session);
         }
         throw error;
       } finally {this.renewals.delete(session);}
@@ -109,6 +146,7 @@ export class HttpGateway implements Gateway {
       }
       if(response.status===401 && session) {
         this.ended.add(session);this.snapshots.delete(session.token);this.proofs.delete(session.token);
+        this.forget(session);
       }
       throw new ApiError(error.error || error.message || `요청 실패 (${response.status})`, response.status, error.code, error.details);
     }
@@ -116,7 +154,9 @@ export class HttpGateway implements Gateway {
   }
   async login(id: string, password: string): Promise<Session> {
     const result = await this.request<{accessToken: string; user: ApiUser;expiresAt?:string;refreshToken?:string}>("/auth/login", id.trim() === "admin" ? {loginId: "admin", password} : {email: id.trim(), password});
-    return {token: result.accessToken, user: userOf(result.user),expiresAt:result.expiresAt,refreshToken:result.refreshToken};
+    const session = {token: result.accessToken, user: userOf(result.user),expiresAt:result.expiresAt,refreshToken:result.refreshToken};
+    this.remember(session);
+    return session;
   }
   async register(name: string, id: string, password: string, role: Role): Promise<Session> {
     const result = await this.request<{confirmationRequired?: boolean}>("/workspace-auth/register", {name, email: id.trim(), password, role: serverRole(role)});
@@ -129,6 +169,7 @@ export class HttpGateway implements Gateway {
     // End local use before waiting for an in-flight renewal. Then globally
     // revoke even if that renewal just issued another token for this session.
     this.ended.add(session);
+    this.forget(session);
     this.snapshots.delete(session.token); this.proofs.delete(session.token);
     await this.renewals.get(session)?.catch(()=>{});
     const token={token:session.token,user:session.user};
@@ -139,7 +180,9 @@ export class HttpGateway implements Gateway {
     await this.request("/auth/test-role", {role: serverRole(role)}, session);
     const user = userOf(await this.request<ApiUser>("/me", undefined, session));
     this.snapshots.delete(session.token); this.proofs.delete(session.token);
-    return {...session, user};
+    const next = {...session, user};
+    this.remember(next);
+    return next;
   }
   async snapshot(session: Session, role: Role): Promise<Snapshot> {
     const rows = await this.request<WorkspaceRow[]>("/workspaces", undefined, session);
@@ -178,7 +221,8 @@ export class HttpGateway implements Gateway {
     if(role !== "author") {
       const list=await this.request<ApiPublication[]>(path+"/publications",undefined,session);
       data.publications=list.map(p=>({id:p.publicationId,submissionId:p.submissionId ?? "",subjectName:p.subject.name,subjectNumber:p.subject.managementNumber,
-        content:p.content,recipients:role==="reader"?[]:p.recipientIds ?? [],state:role==="reader"?"published":p.status ?? "unpublished",publishedAt:p.publishedAt ?? "",version:p.version}));
+        content:p.content,recipients:role==="reader"?[]:p.recipientIds ?? [],state:role==="reader"?"published":p.status ?? "unpublished",publishedAt:p.publishedAt ?? "",
+        recordedAt:p.recordedAt ?? data.submissions.find(s=>s.id===p.submissionId)?.createdAt,version:p.version}));
     }
     if(role==="reviewer") {
       const members=await this.request<{userId:string;name:string;role:string;status:"active"}[]>(path+"/members",undefined,session);
@@ -189,7 +233,7 @@ export class HttpGateway implements Gateway {
       const seen=new Set<string>();
       do {
         const page: AuditPage=await this.request<AuditPage>(path+"/audit?limit=50"+(cursor?"&cursor="+encode(cursor):""),undefined,session);
-        data.audit.push(...page.items.map(a=>({id:a.eventId,text:a.action,actor:a.actorNameAtEvent || a.actorCurrentName || a.actorId,at:a.at,details:a.reason || undefined})));
+        data.audit.push(...page.items.map(a=>({id:a.eventId,action:a.action,text:auditLabel(a.action),actor:a.actorNameAtEvent || a.actorCurrentName || a.actorId,at:a.at,details:a.reason ? `사유: ${a.reason}` : undefined})));
         cursor=page.nextCursor;
         if(cursor && seen.has(cursor)) throw new ApiError("이력 페이지 응답을 확인할 수 없습니다.");
         if(cursor) seen.add(cursor);
@@ -292,4 +336,4 @@ export class HttpGateway implements Gateway {
   }
 }
 export const isMock = import.meta.env.DEV && import.meta.env.MODE === "carebridge";
-export const gateway: Gateway = isMock ? new MockGateway() : new HttpGateway(import.meta.env.VITE_CAREBRIDGE_API_URL || "");
+export const gateway: Gateway = isMock ? new PreviewGateway() : new HttpGateway(import.meta.env.VITE_CAREBRIDGE_API_URL || "");

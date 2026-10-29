@@ -1,0 +1,2082 @@
+{
+  "업무 현황": {
+    "en": "Dashboard",
+    "vi": "Tổng quan công việc",
+    "id": "Ringkasan tugas"
+  },
+  "메모 작성": {
+    "en": "Write a note",
+    "vi": "Viết ghi chú",
+    "id": "Tulis catatan"
+  },
+  "내 메모": {
+    "en": "My notes",
+    "vi": "Ghi chú của tôi",
+    "id": "Catatan saya"
+  },
+  "참여 요청": {
+    "en": "Join requests",
+    "vi": "Yêu cầu tham gia",
+    "id": "Permintaan bergabung"
+  },
+  "구성원 관리": {
+    "en": "Members",
+    "vi": "Quản lý thành viên",
+    "id": "Kelola anggota"
+  },
+  "돌봄 대상": {
+    "en": "Care recipients",
+    "vi": "Người được chăm sóc",
+    "id": "Penerima perawatan"
+  },
+  "공개 기록": {
+    "en": "Shared records",
+    "vi": "Hồ sơ đã chia sẻ",
+    "id": "Catatan dibagikan"
+  },
+  "검토 이력": {
+    "en": "Activity history",
+    "vi": "Lịch sử xử lý",
+    "id": "Riwayat aktivitas"
+  },
+  "설정": {
+    "en": "Settings",
+    "vi": "Cài đặt",
+    "id": "Pengaturan"
+  },
+  "로그인 상태를 확인하지 못했습니다. 연결을 확인하고 다시 시도해 주세요.": {
+    "en": "Unable to verify your sign-in. Check your connection and try again.",
+    "vi": "Không thể xác minh đăng nhập. Kiểm tra kết nối rồi thử lại.",
+    "id": "Tidak dapat memverifikasi login. Periksa koneksi dan coba lagi."
+  },
+  "처리 중인 작업이 끝난 뒤 이동해 주세요.": {
+    "en": "Please wait for the current task to finish before leaving.",
+    "vi": "Vui lòng chờ tác vụ hiện tại hoàn tất trước khi chuyển trang.",
+    "id": "Tunggu tugas saat ini selesai sebelum berpindah."
+  },
+  "이 기기에서는 로그아웃했지만 서버 세션 종료에 실패했습니다.": {
+    "en": "Signed out on this device, but the server session could not be ended.",
+    "vi": "Đã đăng xuất trên thiết bị này nhưng không thể kết thúc phiên trên máy chủ.",
+    "id": "Anda telah keluar di perangkat ini, tetapi sesi server belum dapat diakhiri."
+  },
+  "다른 작업에서 기록이 변경되었습니다. 입력 내용은 유지됩니다. 최신 기록을 확인한 뒤 다시 진행해 주세요.": {
+    "en": "This record changed elsewhere. Your edits are preserved. Check the latest record before continuing.",
+    "vi": "Hồ sơ đã được thay đổi ở nơi khác. Nội dung đang sửa được giữ lại. Kiểm tra bản mới nhất trước khi tiếp tục.",
+    "id": "Catatan diubah di tempat lain. Perubahan Anda tetap tersimpan di layar. Periksa catatan terbaru sebelum melanjutkan."
+  },
+  "다른 작업에서 기록이 변경되었습니다. 최신 기록을 확인해 주세요.": {
+    "en": "This record changed elsewhere. Please check the latest version.",
+    "vi": "Hồ sơ đã được thay đổi ở nơi khác. Vui lòng kiểm tra bản mới nhất.",
+    "id": "Catatan diubah di tempat lain. Periksa versi terbaru."
+  },
+  "음성 메모는 30초 이하로 준비해 주세요.": {
+    "en": "Voice notes must be 30 seconds or shorter.",
+    "vi": "Ghi chú giọng nói phải dài tối đa 30 giây.",
+    "id": "Catatan suara maksimal 30 detik."
+  },
+  "이미 공개 중인 기록입니다. 현재 공개를 차단한 뒤 수정해 주세요.": {
+    "en": "This record is already shared. Block access before editing.",
+    "vi": "Hồ sơ đang được chia sẻ. Hãy chặn quyền xem trước khi sửa.",
+    "id": "Catatan sudah dibagikan. Blokir akses sebelum mengedit."
+  },
+  "로그인 상태를 확인하고 있어요…": {
+    "en": "Checking your sign-in…",
+    "vi": "Đang kiểm tra đăng nhập…",
+    "id": "Memeriksa login…"
+  },
+  "다시 확인": {
+    "en": "Try again",
+    "vi": "Thử lại",
+    "id": "Coba lagi"
+  },
+  "대상자": {
+    "en": "Care recipient",
+    "vi": "Người được chăm sóc",
+    "id": "Penerima perawatan"
+  },
+  "검토함": {
+    "en": "Review inbox",
+    "vi": "Hộp thư duyệt",
+    "id": "Kotak tinjauan"
+  },
+  "전달 사항": {
+    "en": "Updates for you",
+    "vi": "Thông tin được chia sẻ",
+    "id": "Informasi untuk Anda"
+  },
+  "대상자 / 기록": {
+    "en": "Person / record",
+    "vi": "Người / hồ sơ",
+    "id": "Penerima / catatan"
+  },
+  "작성자": {
+    "en": "Author",
+    "vi": "Người viết",
+    "id": "Penulis"
+  },
+  "제출 시각": {
+    "en": "Submitted at",
+    "vi": "Thời gian gửi",
+    "id": "Waktu dikirim"
+  },
+  "상태": {
+    "en": "Status",
+    "vi": "Trạng thái",
+    "id": "Status"
+  },
+  "상세": {
+    "en": "Details",
+    "vi": "Chi tiết",
+    "id": "Detail"
+  },
+  "↳ 이전 제출에서 이어진 새 검토 건": {
+    "en": "↳ New review linked to an earlier submission",
+    "vi": "↳ Bản duyệt mới từ lần gửi trước",
+    "id": "↳ Tinjauan baru dari pengiriman sebelumnya"
+  },
+  "내용 보기 ↗": {
+    "en": "View details ↗",
+    "vi": "Xem chi tiết ↗",
+    "id": "Lihat detail ↗"
+  },
+  "표시할 메모가 없습니다": {
+    "en": "No notes to display",
+    "vi": "Chưa có ghi chú để hiển thị",
+    "id": "Belum ada catatan"
+  },
+  "새로운 기록이 도착하면 여기에서 확인할 수 있어요.": {
+    "en": "New records will appear here when they arrive.",
+    "vi": "Hồ sơ mới sẽ xuất hiện tại đây khi được gửi đến.",
+    "id": "Catatan baru akan muncul di sini."
+  },
+  "작업 그룹": {
+    "en": "Workspace",
+    "vi": "Nhóm làm việc",
+    "id": "Ruang kerja"
+  },
+  "기관 작업 공간": {
+    "en": "Organization workspace",
+    "vi": "Không gian làm việc của cơ sở",
+    "id": "Ruang kerja lembaga"
+  },
+  "매일의 돌봄": {
+    "en": "Everyday care",
+    "vi": "Chăm sóc hằng ngày",
+    "id": "Perawatan sehari-hari"
+  },
+  "주 메뉴": {
+    "en": "Main menu",
+    "vi": "Menu chính",
+    "id": "Menu utama"
+  },
+  "↪ 로그아웃": {
+    "en": "↪ Sign out",
+    "vi": "↪ Đăng xuất",
+    "id": "↪ Keluar"
+  },
+  "메뉴 닫기": {
+    "en": "Close menu",
+    "vi": "Đóng menu",
+    "id": "Tutup menu"
+  },
+  "메뉴 열기": {
+    "en": "Open menu",
+    "vi": "Mở menu",
+    "id": "Buka menu"
+  },
+  "합성 데이터 · AI 응답은 모의 결과입니다": {
+    "en": "Synthetic data · Simulated AI responses",
+    "vi": "Dữ liệu giả lập · Phản hồi AI mô phỏng",
+    "id": "Data sintetis · Respons AI simulasi"
+  },
+  "테스트 역할": {
+    "en": "Test role",
+    "vi": "Vai trò thử nghiệm",
+    "id": "Peran uji"
+  },
+  "역할은 가입 시 고정됩니다": {
+    "en": "Your role is set at sign-up",
+    "vi": "Vai trò được xác định khi đăng ký",
+    "id": "Peran ditetapkan saat pendaftaran"
+  },
+  "← 뒤로가기": {
+    "en": "← Back",
+    "vi": "← Quay lại",
+    "id": "← Kembali"
+  },
+  "최신 내용을 확인하고 있어요…": {
+    "en": "Checking for updates…",
+    "vi": "Đang kiểm tra cập nhật…",
+    "id": "Memeriksa pembaruan…"
+  },
+  "닫기": {
+    "en": "Close",
+    "vi": "Đóng",
+    "id": "Tutup"
+  },
+  "접근 권한을 다시 확인해야 합니다": {
+    "en": "Access needs to be verified again",
+    "vi": "Cần xác minh lại quyền truy cập",
+    "id": "Akses perlu diverifikasi ulang"
+  },
+  "연결이 끊겨 기록 표시를 중단했습니다.": {
+    "en": "The connection was lost. Records are temporarily hidden.",
+    "vi": "Kết nối bị gián đoạn. Hồ sơ tạm thời bị ẩn.",
+    "id": "Koneksi terputus. Catatan disembunyikan sementara."
+  },
+  "다시 연결": {
+    "en": "Reconnect",
+    "vi": "Kết nối lại",
+    "id": "Hubungkan ulang"
+  },
+  "다시 불러오기": {
+    "en": "Reload records",
+    "vi": "Tải lại hồ sơ",
+    "id": "Muat ulang catatan"
+  },
+  "작업 공간을 확인하고 있어요…": {
+    "en": "Checking your workspace…",
+    "vi": "Đang kiểm tra nhóm làm việc…",
+    "id": "Memeriksa ruang kerja…"
+  },
+  "기관의 작업 공간을 연결하세요": {
+    "en": "Connect your organization's workspace",
+    "vi": "Kết nối nhóm làm việc của cơ sở",
+    "id": "Hubungkan ruang kerja lembaga"
+  },
+  "함께할 작업 그룹에 참여하세요": {
+    "en": "Join your team's workspace",
+    "vi": "Tham gia nhóm làm việc",
+    "id": "Bergabung ke ruang kerja tim"
+  },
+  "담당자의 승인 후 업무를 시작할 수 있습니다.": {
+    "en": "You can start work after the manager approves your request.",
+    "vi": "Bạn có thể bắt đầu sau khi người quản lý phê duyệt.",
+    "id": "Anda dapat mulai setelah disetujui pengelola."
+  },
+  "참여 상태:": {
+    "en": "Membership:",
+    "vi": "Trạng thái tham gia:",
+    "id": "Status keanggotaan:"
+  },
+  "승인 대기": {
+    "en": "Awaiting approval",
+    "vi": "Chờ phê duyệt",
+    "id": "Menunggu persetujuan"
+  },
+  "참여 중": {
+    "en": "Active member",
+    "vi": "Đang tham gia",
+    "id": "Anggota aktif"
+  },
+  "거절 · 재요청 가능": {
+    "en": "Declined · You may request again",
+    "vi": "Đã từ chối · Có thể yêu cầu lại",
+    "id": "Ditolak · Dapat meminta kembali"
+  },
+  "퇴출 · 접근 차단": {
+    "en": "Removed · Access blocked",
+    "vi": "Đã xóa khỏi nhóm · Bị chặn truy cập",
+    "id": "Dikeluarkan · Akses diblokir"
+  },
+  "관리 권한 이전 요청": {
+    "en": "Management transfer request",
+    "vi": "Yêu cầu chuyển quyền quản lý",
+    "id": "Permintaan pengalihan pengelolaan"
+  },
+  "이 기관의 관리 권한을 수락할까요?": {
+    "en": "Accept management of this organization?",
+    "vi": "Chấp nhận quyền quản lý cơ sở này?",
+    "id": "Terima pengelolaan lembaga ini?"
+  },
+  "이전 수락": {
+    "en": "Accept transfer",
+    "vi": "Chấp nhận chuyển giao",
+    "id": "Terima pengalihan"
+  },
+  "작업 그룹을 만들었습니다.": {
+    "en": "Workspace created.",
+    "vi": "Đã tạo nhóm làm việc.",
+    "id": "Ruang kerja dibuat."
+  },
+  "기관 이름": {
+    "en": "Organization name",
+    "vi": "Tên cơ sở",
+    "id": "Nama lembaga"
+  },
+  "작업 그룹 생성": {
+    "en": "Create workspace",
+    "vi": "Tạo nhóm làm việc",
+    "id": "Buat ruang kerja"
+  },
+  "모의 환경에는 온유요양센터가 있습니다. 기존 담당자의 설정에서 권한을 이전받을 수 있어요.": {
+    "en": "The demo includes Onyu Care Center. Its current manager can transfer management in Settings.",
+    "vi": "Bản mô phỏng có Trung tâm chăm sóc Onyu. Người quản lý hiện tại có thể chuyển quyền trong Cài đặt.",
+    "id": "Demo mencakup Pusat Perawatan Onyu. Pengelola saat ini dapat mengalihkan pengelolaan di Pengaturan."
+  },
+  "참여를 요청했습니다.": {
+    "en": "Your join request was sent.",
+    "vi": "Đã gửi yêu cầu tham gia.",
+    "id": "Permintaan bergabung dikirim."
+  },
+  "초대코드": {
+    "en": "Invite code",
+    "vi": "Mã mời",
+    "id": "Kode undangan"
+  },
+  "초대코드 입력": {
+    "en": "Enter invite code",
+    "vi": "Nhập mã mời",
+    "id": "Masukkan kode undangan"
+  },
+  "오늘의 기록, 함께 확인해요": {
+    "en": "Let's review today's records",
+    "vi": "Cùng kiểm tra hồ sơ hôm nay",
+    "id": "Mari tinjau catatan hari ini"
+  },
+  "작은 관찰을, 놓치지 않도록": {
+    "en": "Make every observation count",
+    "vi": "Ghi lại từng quan sát nhỏ",
+    "id": "Catat setiap pengamatan"
+  },
+  "＋ 새 메모 작성": {
+    "en": "＋ New note",
+    "vi": "＋ Ghi chú mới",
+    "id": "＋ Catatan baru"
+  },
+  "검토함 열기 ↗": {
+    "en": "Open review inbox ↗",
+    "vi": "Mở hộp thư duyệt ↗",
+    "id": "Buka kotak tinjauan ↗"
+  },
+  "원문부터 검토까지. 확인된 기록을 필요한 사람에게 전달하세요.": {
+    "en": "From the original note to review. Share verified records with the right people.",
+    "vi": "Từ ghi chú gốc đến kiểm duyệt. Chia sẻ hồ sơ đã xác nhận với người cần nhận.",
+    "id": "Dari catatan asli hingga tinjauan. Bagikan catatan terverifikasi kepada penerima yang tepat."
+  },
+  "건": {
+    "en": " records",
+    "vi": " hồ sơ",
+    "id": " catatan"
+  },
+  "확인이 필요한 기록": {
+    "en": "Records awaiting review",
+    "vi": "Hồ sơ cần kiểm tra",
+    "id": "Catatan menunggu tinjauan"
+  },
+  "추가 확인을 기다리는 기록": {
+    "en": "Records awaiting more information",
+    "vi": "Hồ sơ chờ xác minh thêm",
+    "id": "Catatan menunggu informasi tambahan"
+  },
+  "담당자가 확인한 기록": {
+    "en": "Records checked by the reviewer",
+    "vi": "Hồ sơ đã được người duyệt kiểm tra",
+    "id": "Catatan telah diperiksa peninjau"
+  },
+  "검토가 필요한 메모": {
+    "en": "Notes awaiting review",
+    "vi": "Ghi chú cần kiểm duyệt",
+    "id": "Catatan perlu ditinjau"
+  },
+  "최근 제출한 메모": {
+    "en": "Recently submitted notes",
+    "vi": "Ghi chú gửi gần đây",
+    "id": "Catatan terbaru dikirim"
+  },
+  "각 제출 건의 진행 상황을 확인하세요.": {
+    "en": "Check the progress of each submission.",
+    "vi": "Theo dõi tiến độ của từng lần gửi.",
+    "id": "Lihat perkembangan setiap pengiriman."
+  },
+  "전체 보기 →": {
+    "en": "View all →",
+    "vi": "Xem tất cả →",
+    "id": "Lihat semua →"
+  },
+  "명": {
+    "en": " people",
+    "vi": " người",
+    "id": " orang"
+  },
+  "요청 관리 →": {
+    "en": "Manage requests →",
+    "vi": "Quản lý yêu cầu →",
+    "id": "Kelola permintaan →"
+  },
+  "요청 시각": {
+    "en": "Requested at",
+    "vi": "Thời gian yêu cầu",
+    "id": "Waktu permintaan"
+  },
+  "대기 중인 참여 요청이 없습니다.": {
+    "en": "No pending join requests.",
+    "vi": "Không có yêu cầu tham gia đang chờ.",
+    "id": "Tidak ada permintaan bergabung yang menunggu."
+  },
+  "이렇게 기록해 주세요": {
+    "en": "Tips for writing notes",
+    "vi": "Hướng dẫn ghi chép",
+    "id": "Panduan menulis catatan"
+  },
+  "직접 관찰한 사실, 당사자의 말, 제공한 지원을 구분하면 더 명확한 기록이 됩니다.": {
+    "en": "Separate observed facts, the person's own words, and the support provided for a clearer record.",
+    "vi": "Phân biệt sự việc quan sát được, lời của người được chăm sóc và hỗ trợ đã cung cấp để ghi chép rõ hơn.",
+    "id": "Pisahkan fakta yang diamati, ucapan penerima, dan bantuan yang diberikan agar catatan lebih jelas."
+  },
+  "메모 작성하기 →": {
+    "en": "Write a note →",
+    "vi": "Viết ghi chú →",
+    "id": "Tulis catatan →"
+  },
+  "케어브릿지 기록 과정": {
+    "en": "The CareBridge record process",
+    "vi": "Quy trình ghi chép CareBridge",
+    "id": "Alur pencatatan CareBridge"
+  },
+  "관찰이 안전하게 전달되는 네 단계": {
+    "en": "Four steps from observation to safe sharing",
+    "vi": "Bốn bước từ quan sát đến chia sẻ an toàn",
+    "id": "Empat langkah dari pengamatan hingga berbagi dengan aman"
+  },
+  "AI 초안 확인": {
+    "en": "Check AI draft",
+    "vi": "Kiểm tra bản nháp AI",
+    "id": "Periksa draf AI"
+  },
+  "담당자 검토": {
+    "en": "Reviewer check",
+    "vi": "Người phụ trách kiểm duyệt",
+    "id": "Tinjauan penanggung jawab"
+  },
+  "선별한 기록 공개": {
+    "en": "Share selected content",
+    "vi": "Chia sẻ nội dung đã chọn",
+    "id": "Bagikan isi terpilih"
+  },
+  "메모 보완 · 새 제출": {
+    "en": "Revise note · New submission",
+    "vi": "Bổ sung ghi chú · Gửi mới",
+    "id": "Perbaiki catatan · Kirim baru"
+  },
+  "관찰 메모 작성": {
+    "en": "Write an observation note",
+    "vi": "Viết ghi chú quan sát",
+    "id": "Tulis catatan pengamatan"
+  },
+  "01 입력 → 02 확인 → 03 제출": {
+    "en": "01 Write → 02 Check → 03 Submit",
+    "vi": "01 Viết → 02 Kiểm tra → 03 Gửi",
+    "id": "01 Tulis → 02 Periksa → 03 Kirim"
+  },
+  "원문을 작성하고 초안을 확인한 뒤, 담당자에게 제출하세요.": {
+    "en": "Write the original note, check the draft, then send it to the reviewer.",
+    "vi": "Viết ghi chú gốc, kiểm tra bản nháp rồi gửi cho người duyệt.",
+    "id": "Tulis catatan asli, periksa draf, lalu kirim ke peninjau."
+  },
+  "오늘의 관찰을 기록해 주세요": {
+    "en": "Record today's observations",
+    "vi": "Ghi lại quan sát hôm nay",
+    "id": "Catat pengamatan hari ini"
+  },
+  "보완이 필요한 메모": {
+    "en": "Notes needing revision",
+    "vi": "Ghi chú cần bổ sung",
+    "id": "Catatan perlu diperbaiki"
+  },
+  "건 →": {
+    "en": " records →",
+    "vi": " hồ sơ →",
+    "id": " catatan →"
+  },
+  "대상자를 선택하세요": {
+    "en": "Select a care recipient",
+    "vi": "Chọn người được chăm sóc",
+    "id": "Pilih penerima perawatan"
+  },
+  "작성 언어": {
+    "en": "Writing language",
+    "vi": "Ngôn ngữ viết",
+    "id": "Bahasa penulisan"
+  },
+  "한국어": {
+    "en": "한국어",
+    "vi": "한국어",
+    "id": "한국어"
+  },
+  "원문 메모": {
+    "en": "Original note",
+    "vi": "Ghi chú gốc",
+    "id": "Catatan asli"
+  },
+  "직접 관찰한 사실과 제공한 지원을 적어 주세요.": {
+    "en": "Describe what you directly observed and the support you provided.",
+    "vi": "Ghi lại sự việc trực tiếp quan sát và hỗ trợ bạn đã cung cấp.",
+    "id": "Tuliskan pengamatan langsung dan bantuan yang Anda berikan."
+  },
+  "모르는 내용은 추측하지 않고 남겨 주세요.": {
+    "en": "Leave unknown details unknown; do not guess.",
+    "vi": "Không suy đoán những điều chưa biết.",
+    "id": "Jangan menebak hal yang belum diketahui."
+  },
+  "실제 개인정보가 없는 연습용 메모·음성임을 확인했습니다.": {
+    "en": "I confirm this practice note or audio contains no real personal information.",
+    "vi": "Tôi xác nhận ghi chú hoặc âm thanh thực hành không chứa thông tin cá nhân thật.",
+    "id": "Saya memastikan catatan atau audio latihan ini tidak berisi informasi pribadi nyata."
+  },
+  "음성은 30초 이내로 녹음하거나 선택해 주세요. 받아쓴 원문은 생성 전에 직접 확인합니다.": {
+    "en": "Record or select audio up to 30 seconds. Check the transcript before generating a draft.",
+    "vi": "Ghi hoặc chọn âm thanh tối đa 30 giây. Kiểm tra bản chép trước khi tạo bản nháp.",
+    "id": "Rekam atau pilih audio maksimal 30 detik. Periksa transkrip sebelum membuat draf."
+  },
+  "녹음 중지 · 받아쓰기": {
+    "en": "Stop recording · Transcribe",
+    "vi": "Dừng ghi âm · Chép lời",
+    "id": "Hentikan rekaman · Transkripsikan"
+  },
+  "음성 메모 녹음": {
+    "en": "Record voice note",
+    "vi": "Ghi chú bằng giọng nói",
+    "id": "Rekam catatan suara"
+  },
+  "음성 파일 선택": {
+    "en": "Choose audio file",
+    "vi": "Chọn tệp âm thanh",
+    "id": "Pilih berkas audio"
+  },
+  "음성 파일은 10MB 이하로 선택해 주세요.": {
+    "en": "Select an audio file of 10 MB or less.",
+    "vi": "Chọn tệp âm thanh không quá 10 MB.",
+    "id": "Pilih berkas audio maksimal 10 MB."
+  },
+  "받아쓴 원문을 확인하고 필요한 부분을 수정했습니다.": {
+    "en": "I checked the transcript and made any necessary corrections.",
+    "vi": "Tôi đã kiểm tra bản chép và sửa những phần cần thiết.",
+    "id": "Saya telah memeriksa transkrip dan memperbaikinya jika perlu."
+  },
+  "처리 중…": {
+    "en": "Processing…",
+    "vi": "Đang xử lý…",
+    "id": "Memproses…"
+  },
+  "초안 다시 생성": {
+    "en": "Regenerate draft",
+    "vi": "Tạo lại bản nháp",
+    "id": "Buat ulang draf"
+  },
+  "✧ 초안 만들기": {
+    "en": "✧ Create draft",
+    "vi": "✧ Tạo bản nháp",
+    "id": "✧ Buat draf"
+  },
+  "초안 확인 · 수정": {
+    "en": "Check and edit draft",
+    "vi": "Kiểm tra và sửa bản nháp",
+    "id": "Periksa dan edit draf"
+  },
+  "초안 확인사항": {
+    "en": "Draft review points",
+    "vi": "Điểm cần kiểm tra trong bản nháp",
+    "id": "Hal yang perlu diperiksa pada draf"
+  },
+  "원문 또는 언어가 변경됐습니다. 초안을 다시 생성해 주세요.": {
+    "en": "The source or writing language changed. Please regenerate the draft.",
+    "vi": "Ghi chú gốc hoặc ngôn ngữ đã thay đổi. Vui lòng tạo lại bản nháp.",
+    "id": "Sumber atau bahasa penulisan berubah. Buat ulang draf."
+  },
+  "화면 QA용 모의 결과입니다. 실제 번역이나 의미 검사를 수행하지 않습니다.": {
+    "en": "Simulated result for UI testing. No real translation or semantic checking is performed.",
+    "vi": "Kết quả mô phỏng để kiểm tra giao diện. Không thực hiện dịch hoặc kiểm tra ngữ nghĩa thật.",
+    "id": "Hasil simulasi untuk uji tampilan. Tidak melakukan penerjemahan atau pemeriksaan makna nyata."
+  },
+  "제출할 최종 초안": {
+    "en": "Final draft to submit",
+    "vi": "Bản nháp cuối để gửi",
+    "id": "Draf akhir untuk dikirim"
+  },
+  "최초 생성 결과 보기": {
+    "en": "View initial generated draft",
+    "vi": "Xem bản nháp được tạo ban đầu",
+    "id": "Lihat draf awal yang dibuat"
+  },
+  "전송마다 새 검토 건이 쌓이며, 이전 제출 내용은 유지됩니다.": {
+    "en": "Each submission creates a new review. Earlier submissions are preserved.",
+    "vi": "Mỗi lần gửi tạo một lượt duyệt mới. Nội dung đã gửi trước được giữ lại.",
+    "id": "Setiap pengiriman membuat tinjauan baru. Pengiriman sebelumnya tetap disimpan."
+  },
+  "담당자에게 검토를 요청했습니다.": {
+    "en": "Sent to the reviewer.",
+    "vi": "Đã gửi yêu cầu kiểm duyệt.",
+    "id": "Dikirim ke peninjau."
+  },
+  "확인했어요 · 검토 요청 →": {
+    "en": "Checked · Request review →",
+    "vi": "Đã kiểm tra · Yêu cầu duyệt →",
+    "id": "Sudah diperiksa · Minta tinjauan →"
+  },
+  "직접 관찰한 사실": {
+    "en": "Direct observations",
+    "vi": "Sự việc trực tiếp quan sát",
+    "id": "Pengamatan langsung"
+  },
+  "식사량, 수면 모습, 활동 모습 등 직접 본 내용을 구체적으로 적어 주세요.": {
+    "en": "Describe what you saw, such as food intake, sleep, or activities.",
+    "vi": "Ghi cụ thể điều bạn thấy, như lượng ăn, giấc ngủ hoặc hoạt động.",
+    "id": "Jelaskan yang Anda lihat, seperti porsi makan, tidur, atau kegiatan."
+  },
+  "당사자가 한 말": {
+    "en": "The person's own words",
+    "vi": "Lời của người được chăm sóc",
+    "id": "Ucapan penerima perawatan"
+  },
+  "“무릎이 불편해요”처럼 표현을 그대로 남겨 주세요.": {
+    "en": "Keep their exact words, such as “My knee feels uncomfortable.”",
+    "vi": "Giữ nguyên lời nói, ví dụ “Đầu gối tôi khó chịu.”",
+    "id": "Tuliskan ucapan aslinya, seperti “Lutut saya terasa tidak nyaman.”"
+  },
+  "제공한 지원": {
+    "en": "Support provided",
+    "vi": "Hỗ trợ đã cung cấp",
+    "id": "Bantuan yang diberikan"
+  },
+  "이동 보조, 식사 도움 등 실제 제공한 지원을 구분해 주세요.": {
+    "en": "Distinguish the help actually provided, such as mobility or meal assistance.",
+    "vi": "Phân biệt hỗ trợ thực tế đã cung cấp, như hỗ trợ đi lại hoặc ăn uống.",
+    "id": "Bedakan bantuan yang benar-benar diberikan, seperti bantuan berjalan atau makan."
+  },
+  "추가로 확인할 사항": {
+    "en": "Items to check further",
+    "vi": "Điều cần xác minh thêm",
+    "id": "Hal yang perlu diperiksa lebih lanjut"
+  },
+  "확인하지 못한 내용은 미확인으로 남겨 주세요.": {
+    "en": "Mark anything you could not verify as unconfirmed.",
+    "vi": "Ghi là chưa xác nhận đối với điều chưa kiểm chứng.",
+    "id": "Tandai hal yang belum diperiksa sebagai belum terkonfirmasi."
+  },
+  "이 미리보기에서는 합성 메모로 작성 흐름을 확인할 수 있습니다.": {
+    "en": "Use synthetic notes to try the writing workflow in this preview.",
+    "vi": "Dùng ghi chú giả lập để thử quy trình viết trong bản xem trước.",
+    "id": "Gunakan catatan sintetis untuk mencoba alur penulisan pada pratinjau ini."
+  },
+  "음성으로도 기록할 수 있어요. 받아쓴 내용을 확인한 뒤 초안을 만들어 주세요.": {
+    "en": "You can also use your voice. Check the transcript before creating a draft.",
+    "vi": "Bạn cũng có thể ghi bằng giọng nói. Kiểm tra bản chép trước khi tạo bản nháp.",
+    "id": "Anda juga dapat menggunakan suara. Periksa transkrip sebelum membuat draf."
+  },
+  "도착한 메모를 확인하고, 검토를 마친 기록을 전달하세요.": {
+    "en": "Review incoming notes and share records after checking them.",
+    "vi": "Kiểm tra ghi chú nhận được rồi chia sẻ hồ sơ đã duyệt.",
+    "id": "Tinjau catatan masuk dan bagikan setelah diperiksa."
+  },
+  "내가 남긴 기록과 담당자의 검토 결과를 확인하세요.": {
+    "en": "See your notes and the reviewer's feedback.",
+    "vi": "Xem ghi chú của bạn và kết quả kiểm duyệt.",
+    "id": "Lihat catatan Anda dan hasil tinjauan."
+  },
+  "검토 진행 상황": {
+    "en": "Review progress",
+    "vi": "Tiến độ kiểm duyệt",
+    "id": "Progres tinjauan"
+  },
+  "검토 대기": {
+    "en": "Awaiting review",
+    "vi": "Chờ kiểm duyệt",
+    "id": "Menunggu tinjauan"
+  },
+  "보류 중": {
+    "en": "On hold",
+    "vi": "Đang tạm hoãn",
+    "id": "Ditunda"
+  },
+  "검토 완료": {
+    "en": "Review complete",
+    "vi": "Đã duyệt",
+    "id": "Tinjauan selesai"
+  },
+  "전체": {
+    "en": "All",
+    "vi": "Tất cả",
+    "id": "Semua"
+  },
+  "메모 검색": {
+    "en": "Search notes",
+    "vi": "Tìm ghi chú",
+    "id": "Cari catatan"
+  },
+  "대상자, 작성자, 메모 검색": {
+    "en": "Search by care recipient, author, or note",
+    "vi": "Tìm theo người được chăm sóc, người viết hoặc ghi chú",
+    "id": "Cari penerima, penulis, atau catatan"
+  },
+  "함께할 구성원을 확인해요": {
+    "en": "Review people joining your team",
+    "vi": "Kiểm tra người muốn tham gia nhóm",
+    "id": "Tinjau calon anggota tim"
+  },
+  "건 대기": {
+    "en": " pending",
+    "vi": " đang chờ",
+    "id": " menunggu"
+  },
+  "초대코드로 요청한 사용자는 승인 후에 업무를 시작할 수 있어요.": {
+    "en": "People requesting access with an invite code can start after approval.",
+    "vi": "Người yêu cầu tham gia bằng mã mời có thể bắt đầu sau khi được duyệt.",
+    "id": "Pemohon dengan kode undangan dapat mulai setelah disetujui."
+  },
+  "거절했습니다. 사용자는 재요청할 수 있습니다.": {
+    "en": "Request declined. The person may request again.",
+    "vi": "Đã từ chối. Người dùng có thể yêu cầu lại.",
+    "id": "Permintaan ditolak. Pengguna dapat meminta kembali."
+  },
+  "거절": {
+    "en": "Declined",
+    "vi": "Đã từ chối",
+    "id": "Ditolak"
+  },
+  "참여를 승인했습니다.": {
+    "en": "Membership approved.",
+    "vi": "Đã phê duyệt tham gia.",
+    "id": "Keanggotaan disetujui."
+  },
+  "참여 승인": {
+    "en": "Approve membership",
+    "vi": "Phê duyệt tham gia",
+    "id": "Setujui keanggotaan"
+  },
+  "대기 중인 요청이 없습니다": {
+    "en": "No pending requests",
+    "vi": "Không có yêu cầu đang chờ",
+    "id": "Tidak ada permintaan menunggu"
+  },
+  "새로운 참여 요청이 도착하면 표시됩니다.": {
+    "en": "New join requests will appear here.",
+    "vi": "Yêu cầu tham gia mới sẽ xuất hiện tại đây.",
+    "id": "Permintaan bergabung baru akan muncul di sini."
+  },
+  "함께하는 구성원": {
+    "en": "Your team members",
+    "vi": "Các thành viên trong nhóm",
+    "id": "Anggota tim Anda"
+  },
+  "초대코드를 복사했습니다.": {
+    "en": "Invite code copied.",
+    "vi": "Đã sao chép mã mời.",
+    "id": "Kode undangan disalin."
+  },
+  "참여 권한과 기록 공개 권한은 각각 관리됩니다.": {
+    "en": "Workspace access and record sharing are managed separately.",
+    "vi": "Quyền tham gia nhóm và quyền xem hồ sơ được quản lý riêng.",
+    "id": "Akses ruang kerja dan berbagi catatan dikelola secara terpisah."
+  },
+  "퇴출": {
+    "en": "Remove member",
+    "vi": "Xóa khỏi nhóm",
+    "id": "Keluarkan anggota"
+  },
+  "＋ 대상자 등록": {
+    "en": "＋ Add care recipient",
+    "vi": "＋ Thêm người được chăm sóc",
+    "id": "＋ Tambah penerima perawatan"
+  },
+  "이름으로 찾고, 관리번호로 정확하게 구분하세요.": {
+    "en": "Find people by name and distinguish them by their ID number.",
+    "vi": "Tìm theo tên và phân biệt chính xác bằng số quản lý.",
+    "id": "Cari berdasarkan nama dan bedakan dengan nomor identifikasi."
+  },
+  "대상자 검색": {
+    "en": "Search care recipients",
+    "vi": "Tìm người được chăm sóc",
+    "id": "Cari penerima perawatan"
+  },
+  "이름 또는 관리번호 검색": {
+    "en": "Search by name or ID number",
+    "vi": "Tìm theo tên hoặc số quản lý",
+    "id": "Cari nama atau nomor identifikasi"
+  },
+  "등록된 메모가 없습니다.": {
+    "en": "No notes registered.",
+    "vi": "Chưa có ghi chú.",
+    "id": "Belum ada catatan terdaftar."
+  },
+  "수신자는 공개할 때 직접 선택합니다": {
+    "en": "Choose recipients when sharing",
+    "vi": "Chọn người nhận khi chia sẻ",
+    "id": "Pilih penerima saat berbagi"
+  },
+  "나에게 전달된 기록": {
+    "en": "Records shared with me",
+    "vi": "Hồ sơ được chia sẻ với tôi",
+    "id": "Catatan dibagikan kepada saya"
+  },
+  "확인하고, 필요한 사람에게": {
+    "en": "Check, then share with the right people",
+    "vi": "Kiểm tra rồi chia sẻ đúng người",
+    "id": "Periksa, lalu bagikan kepada penerima yang tepat"
+  },
+  "담당자가 확인하고 나에게 공개한 내용만 모았습니다.": {
+    "en": "Only records checked and shared with you by the reviewer appear here.",
+    "vi": "Chỉ hiển thị hồ sơ người duyệt đã kiểm tra và chia sẻ với bạn.",
+    "id": "Hanya catatan yang diperiksa dan dibagikan kepada Anda oleh peninjau yang ditampilkan."
+  },
+  "확정된 기록의 공개 내용과 수신자를 직접 결정하세요.": {
+    "en": "Choose the content and recipients for each confirmed record.",
+    "vi": "Chọn nội dung và người nhận cho từng hồ sơ đã xác nhận.",
+    "id": "Pilih isi dan penerima untuk setiap catatan yang dikonfirmasi."
+  },
+  "공개 준비": {
+    "en": "Ready to share",
+    "vi": "Chuẩn bị chia sẻ",
+    "id": "Siap dibagikan"
+  },
+  "확정과 공개는 별도 단계입니다": {
+    "en": "Confirmation and sharing are separate steps",
+    "vi": "Xác nhận và chia sẻ là hai bước riêng",
+    "id": "Konfirmasi dan berbagi adalah langkah terpisah"
+  },
+  "내용·수신자 선택": {
+    "en": "Choose content and recipients",
+    "vi": "Chọn nội dung và người nhận",
+    "id": "Pilih isi dan penerima"
+  },
+  "공개 준비 중인 확정 기록이 없습니다.": {
+    "en": "No confirmed records are waiting to be shared.",
+    "vi": "Không có hồ sơ đã xác nhận đang chờ chia sẻ.",
+    "id": "Tidak ada catatan terkonfirmasi yang menunggu dibagikan."
+  },
+  "기록 시각": {
+    "en": "Recorded at",
+    "vi": "Thời gian ghi nhận",
+    "id": "Waktu pencatatan"
+  },
+  "공개 시각": {
+    "en": "Shared at",
+    "vi": "Thời gian chia sẻ",
+    "id": "Waktu dibagikan"
+  },
+  "전달 내용 읽기 →": {
+    "en": "Read shared content →",
+    "vi": "Đọc nội dung chia sẻ →",
+    "id": "Baca isi yang dibagikan →"
+  },
+  "수신자": {
+    "en": "Recipients",
+    "vi": "Người nhận",
+    "id": "Penerima"
+  },
+  "없음": {
+    "en": "None",
+    "vi": "Không có",
+    "id": "Tidak ada"
+  },
+  "공개 내용·수신자 수정": {
+    "en": "Edit content and recipients",
+    "vi": "Sửa nội dung và người nhận",
+    "id": "Edit isi dan penerima"
+  },
+  "기존 공개를 차단했습니다. 정정 후 별도로 공개해 주세요.": {
+    "en": "Previous access was blocked. Share again separately after making corrections.",
+    "vi": "Đã chặn quyền xem trước đó. Sau khi sửa, cần chia sẻ lại riêng.",
+    "id": "Akses sebelumnya diblokir. Bagikan kembali setelah melakukan koreksi."
+  },
+  "차단 후 상태를 확인하지 못했습니다. 공개 기록을 다시 불러온 뒤 수정해 주세요.": {
+    "en": "Unable to verify the blocked state. Reload shared records before editing.",
+    "vi": "Không thể xác minh trạng thái đã chặn. Tải lại hồ sơ chia sẻ trước khi sửa.",
+    "id": "Tidak dapat memverifikasi pemblokiran. Muat ulang catatan sebelum mengedit."
+  },
+  "차단 후 내용·수신자 정정": {
+    "en": "Block access and edit",
+    "vi": "Chặn quyền xem và sửa",
+    "id": "Blokir akses dan edit"
+  },
+  "공개를 철회하면 모든 수신자의 열린 화면에서도 내용이 숨겨집니다.": {
+    "en": "Withdrawing access also hides the content on recipients' open screens.",
+    "vi": "Thu hồi quyền xem sẽ ẩn nội dung cả trên màn hình đang mở của người nhận.",
+    "id": "Mencabut akses juga menyembunyikan isi pada layar penerima yang sedang terbuka."
+  },
+  "철회": {
+    "en": "Withdraw access",
+    "vi": "Thu hồi quyền xem",
+    "id": "Cabut akses"
+  },
+  "아직 전달된 기록이 없습니다": {
+    "en": "No shared records yet",
+    "vi": "Chưa có hồ sơ được chia sẻ",
+    "id": "Belum ada catatan dibagikan"
+  },
+  "담당자가 내용을 공개하면 여기에서 확인할 수 있어요.": {
+    "en": "Records will appear here when the reviewer shares them.",
+    "vi": "Hồ sơ sẽ xuất hiện tại đây khi người duyệt chia sẻ.",
+    "id": "Catatan akan muncul setelah dibagikan oleh peninjau."
+  },
+  "메모 검토, 기록 공개, 참여 승인 등 작업 그룹의 처리 내역을 확인하세요.": {
+    "en": "See workspace actions, including reviews, sharing, and membership approvals.",
+    "vi": "Xem các thao tác trong nhóm, gồm kiểm duyệt, chia sẻ và phê duyệt tham gia.",
+    "id": "Lihat aktivitas ruang kerja, termasuk tinjauan, berbagi, dan persetujuan anggota."
+  },
+  "처리자:": {
+    "en": "Performed by:",
+    "vi": "Người thực hiện:",
+    "id": "Dilakukan oleh:"
+  },
+  "상세 내용": {
+    "en": "More details",
+    "vi": "Thông tin chi tiết",
+    "id": "Detail lainnya"
+  },
+  "새로운 활동을 기다리고 있어요": {
+    "en": "No activity yet",
+    "vi": "Chưa có hoạt động",
+    "id": "Belum ada aktivitas"
+  },
+  "검토·참여 승인·공개 등의 활동이 기록됩니다.": {
+    "en": "Reviews, membership approvals, and sharing actions are recorded here.",
+    "vi": "Các thao tác kiểm duyệt, phê duyệt tham gia và chia sẻ được ghi tại đây.",
+    "id": "Tinjauan, persetujuan anggota, dan aktivitas berbagi dicatat di sini."
+  },
+  "내 계정과 작업 그룹 정보를 확인하세요.": {
+    "en": "View your account and workspace information.",
+    "vi": "Xem thông tin tài khoản và nhóm làm việc.",
+    "id": "Lihat informasi akun dan ruang kerja Anda."
+  },
+  "계정 정보": {
+    "en": "Account information",
+    "vi": "Thông tin tài khoản",
+    "id": "Informasi akun"
+  },
+  "이름": {
+    "en": "Name",
+    "vi": "Tên",
+    "id": "Nama"
+  },
+  "현재 역할": {
+    "en": "Current role",
+    "vi": "Vai trò hiện tại",
+    "id": "Peran saat ini"
+  },
+  "가입 역할": {
+    "en": "Registration role",
+    "vi": "Vai trò đăng ký",
+    "id": "Peran pendaftaran"
+  },
+  "사용 역할": {
+    "en": "Active role",
+    "vi": "Vai trò đang dùng",
+    "id": "Peran aktif"
+  },
+  "그룹 ·": {
+    "en": " group ·",
+    "vi": " nhóm ·",
+    "id": " grup ·"
+  },
+  "역할은 회원가입 시 고정됩니다.": {
+    "en": "Your role is fixed when you sign up.",
+    "vi": "Vai trò được cố định khi đăng ký.",
+    "id": "Peran Anda ditetapkan saat mendaftar."
+  },
+  "관리 권한 이전": {
+    "en": "Transfer management",
+    "vi": "Chuyển quyền quản lý",
+    "id": "Alihkan pengelolaan"
+  },
+  "새 담당자에게 구성원과 기록 관리 권한을 넘깁니다. 완료하면 현재 담당자의 권한이 종료됩니다.": {
+    "en": "Transfer member and record management to a new manager. Your management access ends when the transfer is complete.",
+    "vi": "Chuyển quyền quản lý thành viên và hồ sơ cho người mới. Quyền của bạn kết thúc khi chuyển giao hoàn tất.",
+    "id": "Alihkan pengelolaan anggota dan catatan ke pengelola baru. Akses pengelolaan Anda berakhir setelah selesai."
+  },
+  "로컬 QA에서는 즉시 이전을 시뮬레이션합니다. 실제 초대·수락 방식은 백엔드와 협의할 예정입니다.": {
+    "en": "Local QA simulates an immediate transfer. The production invitation and acceptance flow is handled separately.",
+    "vi": "QA cục bộ mô phỏng chuyển giao ngay. Quy trình mời và chấp nhận thực tế được xử lý riêng.",
+    "id": "QA lokal menyimulasikan pengalihan langsung. Alur undangan dan penerimaan produksi ditangani terpisah."
+  },
+  "내 사용자 ID:": {
+    "en": "My user ID:",
+    "vi": "ID người dùng của tôi:",
+    "id": "ID pengguna saya:"
+  },
+  "새 2그룹 담당자": {
+    "en": "New group 2 manager",
+    "vi": "Người phụ trách nhóm 2 mới",
+    "id": "Pengelola grup 2 baru"
+  },
+  "이전받을 담당자의 사용자 ID": {
+    "en": "User ID of the new manager",
+    "vi": "ID người dùng của người quản lý mới",
+    "id": "ID pengguna pengelola baru"
+  },
+  "담당자를 선택하세요": {
+    "en": "Select a manager",
+    "vi": "Chọn người phụ trách",
+    "id": "Pilih pengelola"
+  },
+  "관리 권한을 이전하면 현재 담당자는 이 그룹을 관리할 수 없습니다. 이전하시겠어요?": {
+    "en": "After transfer, you will no longer manage this workspace. Continue?",
+    "vi": "Sau khi chuyển giao, bạn không thể quản lý nhóm này nữa. Tiếp tục?",
+    "id": "Setelah pengalihan, Anda tidak dapat mengelola ruang kerja ini lagi. Lanjutkan?"
+  },
+  "수락 대기": {
+    "en": "Awaiting acceptance",
+    "vi": "Chờ chấp nhận",
+    "id": "Menunggu penerimaan"
+  },
+  "이전 완료": {
+    "en": "Transfer complete",
+    "vi": "Đã chuyển giao",
+    "id": "Pengalihan selesai"
+  },
+  "취소됨": {
+    "en": "Cancelled",
+    "vi": "Đã hủy",
+    "id": "Dibatalkan"
+  },
+  "이전 요청을 취소할까요?": {
+    "en": "Cancel this transfer request?",
+    "vi": "Hủy yêu cầu chuyển giao này?",
+    "id": "Batalkan permintaan pengalihan ini?"
+  },
+  "요청 취소": {
+    "en": "Cancel request",
+    "vi": "Hủy yêu cầu",
+    "id": "Batalkan permintaan"
+  },
+  "로컬 QA 데이터": {
+    "en": "Local QA data",
+    "vi": "Dữ liệu QA cục bộ",
+    "id": "Data QA lokal"
+  },
+  "이 브라우저의 합성 데이터를 초기 시나리오로 되돌립니다.": {
+    "en": "Reset this browser's synthetic data to the initial scenario.",
+    "vi": "Đặt lại dữ liệu giả lập của trình duyệt về kịch bản ban đầu.",
+    "id": "Atur ulang data sintetis browser ini ke skenario awal."
+  },
+  "합성 데이터를 초기화했습니다.": {
+    "en": "Synthetic data reset.",
+    "vi": "Đã đặt lại dữ liệu giả lập.",
+    "id": "Data sintetis diatur ulang."
+  },
+  "합성 데이터 초기화": {
+    "en": "Reset synthetic data",
+    "vi": "Đặt lại dữ liệu giả lập",
+    "id": "Atur ulang data sintetis"
+  },
+  "함께 만드는, 더 나은 돌봄 기록": {
+    "en": "Better care records, together",
+    "vi": "Cùng tạo hồ sơ chăm sóc tốt hơn",
+    "id": "Bersama mencatat perawatan yang lebih baik"
+  },
+  "초안을 다시 생성할까요?": {
+    "en": "Regenerate the draft?",
+    "vi": "Tạo lại bản nháp?",
+    "id": "Buat ulang draf?"
+  },
+  "다시 생성하면 현재 초안과 직접 수정한 내용이 새 결과로 바뀝니다. 취소하면 작성한 내용이 유지됩니다.": {
+    "en": "Regenerating replaces the current draft and your edits. Cancel to keep your work.",
+    "vi": "Tạo lại sẽ thay bản nháp hiện tại và các chỉnh sửa của bạn. Hủy để giữ nội dung.",
+    "id": "Membuat ulang akan mengganti draf dan perubahan Anda. Batalkan untuk mempertahankan pekerjaan Anda."
+  },
+  "취소": {
+    "en": "Cancel",
+    "vi": "Hủy",
+    "id": "Batal"
+  },
+  "새 초안 생성": {
+    "en": "Generate new draft",
+    "vi": "Tạo bản nháp mới",
+    "id": "Buat draf baru"
+  },
+  "메모 검토": {
+    "en": "Review note",
+    "vi": "Kiểm duyệt ghi chú",
+    "id": "Tinjau catatan"
+  },
+  "내 메모 상세": {
+    "en": "My note details",
+    "vi": "Chi tiết ghi chú của tôi",
+    "id": "Detail catatan saya"
+  },
+  "← 목록으로": {
+    "en": "← Back to list",
+    "vi": "← Về danh sách",
+    "id": "← Kembali ke daftar"
+  },
+  "다른 작업에서 이 기록이 변경되었습니다. 작성 중인 내용은 유지했으며 저장·확정은 중단했습니다. 최신 내용을 확인하려면 입력 내용을 따로 보관한 뒤 닫고 다시 열어 주세요.": {
+    "en": "This record changed elsewhere. Your edits remain, but saving and confirmation are blocked. Copy your edits, then close and reopen to see the latest record.",
+    "vi": "Hồ sơ đã đổi ở nơi khác. Nội dung sửa được giữ nhưng việc lưu và xác nhận đã dừng. Sao chép nội dung rồi đóng và mở lại để xem bản mới nhất.",
+    "id": "Catatan diubah di tempat lain. Perubahan tetap ada, tetapi penyimpanan dan konfirmasi diblokir. Salin perubahan, lalu tutup dan buka kembali untuk melihat catatan terbaru."
+  },
+  "제출 당시 원문 · 변경되지 않습니다": {
+    "en": "Original at submission · Unchanged",
+    "vi": "Bản gốc khi gửi · Không thay đổi",
+    "id": "Sumber saat dikirim · Tidak diubah"
+  },
+  "작성자가 확인한 초안": {
+    "en": "Draft checked by the author",
+    "vi": "Bản nháp người viết đã kiểm tra",
+    "id": "Draf diperiksa penulis"
+  },
+  "최초 생성 결과": {
+    "en": "Initial generated draft",
+    "vi": "Bản nháp được tạo ban đầu",
+    "id": "Draf awal yang dibuat"
+  },
+  "검토 사유": {
+    "en": "Review reason",
+    "vi": "Lý do kiểm duyệt",
+    "id": "Alasan tinjauan"
+  },
+  "저장된 검사 확인사항": {
+    "en": "Saved check results",
+    "vi": "Kết quả kiểm tra đã lưu",
+    "id": "Hasil pemeriksaan tersimpan"
+  },
+  "원문을 대조했습니다.": {
+    "en": "I compared this with the original.",
+    "vi": "Tôi đã đối chiếu với bản gốc.",
+    "id": "Saya telah membandingkan dengan sumber asli."
+  },
+  "확인사항과 경고를 확인했습니다. 경고가 있어도 확정할 수 있습니다.": {
+    "en": "I reviewed the checks and warnings. Confirmation is allowed even with warnings.",
+    "vi": "Tôi đã xem các điểm kiểm tra và cảnh báo. Có thể xác nhận dù có cảnh báo.",
+    "id": "Saya telah meninjau pemeriksaan dan peringatan. Konfirmasi tetap diperbolehkan meski ada peringatan."
+  },
+  "최종 내용을 검사한 뒤 확인사항을 검토해 주세요. 수정 후에는 다시 검사해야 합니다.": {
+    "en": "Run the final check and review its findings. Check again after editing.",
+    "vi": "Kiểm tra nội dung cuối và xem kết quả. Cần kiểm tra lại sau khi sửa.",
+    "id": "Jalankan pemeriksaan akhir dan tinjau hasilnya. Periksa lagi setelah mengedit."
+  },
+  "검토 내용": {
+    "en": "Review content",
+    "vi": "Nội dung kiểm duyệt",
+    "id": "Isi tinjauan"
+  },
+  "검토·보류 사유": {
+    "en": "Review / hold reason",
+    "vi": "Lý do duyệt / tạm hoãn",
+    "id": "Alasan tinjauan / penundaan"
+  },
+  "보류할 때는 사유를 반드시 남겨 주세요.": {
+    "en": "A reason is required when placing a record on hold.",
+    "vi": "Phải ghi lý do khi tạm hoãn.",
+    "id": "Alasan wajib diisi saat menunda catatan."
+  },
+  "최종 내용 저장 · AI 검사": {
+    "en": "Save final content · AI check",
+    "vi": "Lưu nội dung cuối · Kiểm tra AI",
+    "id": "Simpan isi akhir · Periksa dengan AI"
+  },
+  "확인이 필요한 검사 결과입니다": {
+    "en": "The check found items to review",
+    "vi": "Kết quả có điểm cần xem xét",
+    "id": "Ada hasil pemeriksaan yang perlu ditinjau"
+  },
+  "최종 내용 검사를 마쳤습니다": {
+    "en": "Final content checked",
+    "vi": "Đã kiểm tra nội dung cuối",
+    "id": "Isi akhir telah diperiksa"
+  },
+  "추가 경고가 없습니다. 원문과 내용을 직접 확인해 주세요.": {
+    "en": "No additional warnings. Please check the source and content yourself.",
+    "vi": "Không có cảnh báo thêm. Hãy tự kiểm tra bản gốc và nội dung.",
+    "id": "Tidak ada peringatan tambahan. Periksa sendiri sumber dan isinya."
+  },
+  "기록을 확정했습니다. 공개는 별도로 진행해 주세요.": {
+    "en": "Record confirmed. Sharing is a separate step.",
+    "vi": "Đã xác nhận hồ sơ. Chia sẻ là bước riêng.",
+    "id": "Catatan dikonfirmasi. Berbagi adalah langkah terpisah."
+  },
+  "검토 내용을 저장했습니다.": {
+    "en": "Review content saved.",
+    "vi": "Đã lưu nội dung kiểm duyệt.",
+    "id": "Isi tinjauan disimpan."
+  },
+  "보류": {
+    "en": "On hold",
+    "vi": "Tạm hoãn",
+    "id": "Ditunda"
+  },
+  "수정 저장": {
+    "en": "Save edits",
+    "vi": "Lưu chỉnh sửa",
+    "id": "Simpan perubahan"
+  },
+  "검토 완료 · 확정": {
+    "en": "Complete review · Confirm",
+    "vi": "Hoàn tất duyệt · Xác nhận",
+    "id": "Selesaikan tinjauan · Konfirmasi"
+  },
+  "담당자 검토 내용": {
+    "en": "Reviewer's content",
+    "vi": "Nội dung của người duyệt",
+    "id": "Isi dari peninjau"
+  },
+  "보완 후 재검토 요청": {
+    "en": "Revise and request another review",
+    "vi": "Bổ sung và yêu cầu duyệt lại",
+    "id": "Perbaiki dan minta tinjauan ulang"
+  },
+  "수정해서 새로 제출": {
+    "en": "Edit and submit as new",
+    "vi": "Sửa và gửi bản mới",
+    "id": "Edit dan kirim sebagai baru"
+  },
+  "공개 기록 관리": {
+    "en": "Manage shared records",
+    "vi": "Quản lý hồ sơ chia sẻ",
+    "id": "Kelola catatan dibagikan"
+  },
+  "공개 내용·수신자 선택": {
+    "en": "Choose shared content and recipients",
+    "vi": "Chọn nội dung chia sẻ và người nhận",
+    "id": "Pilih isi berbagi dan penerima"
+  },
+  "이 메모의 제출 이력 (": {
+    "en": "Submission history for this note (",
+    "vi": "Lịch sử gửi ghi chú này (",
+    "id": "Riwayat pengiriman catatan ini ("
+  },
+  "공개 전 마지막 확인": {
+    "en": "Final check before sharing",
+    "vi": "Kiểm tra cuối trước khi chia sẻ",
+    "id": "Pemeriksaan akhir sebelum berbagi"
+  },
+  "공개 내용과 수신자 선택": {
+    "en": "Shared content and recipients",
+    "vi": "Nội dung chia sẻ và người nhận",
+    "id": "Isi berbagi dan penerima"
+  },
+  "공개할 기록이 다른 작업에서 변경되었습니다. 입력 내용은 유지됩니다. 최신 기록을 확인한 뒤 공개해 주세요.": {
+    "en": "The record to share changed elsewhere. Your edits remain. Check the latest record before sharing.",
+    "vi": "Hồ sơ cần chia sẻ đã đổi ở nơi khác. Nội dung sửa được giữ lại. Kiểm tra bản mới nhất trước khi chia sẻ.",
+    "id": "Catatan yang akan dibagikan diubah di tempat lain. Perubahan Anda tetap ada. Periksa catatan terbaru sebelum berbagi."
+  },
+  "선택한 수신자의 참여 상태가 변경되었습니다. 수신자 선택으로 돌아가 전체 선택을 다시 확인해 주세요.": {
+    "en": "A selected recipient's membership changed. Go back and check the recipient selection again.",
+    "vi": "Trạng thái tham gia của người nhận đã thay đổi. Quay lại và kiểm tra lựa chọn người nhận.",
+    "id": "Keanggotaan penerima terpilih berubah. Kembali dan periksa pilihan penerima."
+  },
+  "수신자:": {
+    "en": "Recipients:",
+    "vi": "Người nhận:",
+    "id": "Penerima:"
+  },
+  "공개 버튼을 눌러야 선택한 수신자가 열람할 수 있습니다.": {
+    "en": "Selected recipients can view the record only after you press Share.",
+    "vi": "Người nhận chỉ xem được sau khi bạn nhấn Chia sẻ.",
+    "id": "Penerima terpilih baru dapat melihat catatan setelah Anda menekan Bagikan."
+  },
+  "이전": {
+    "en": "Previous",
+    "vi": "Trước",
+    "id": "Sebelumnya"
+  },
+  "선택한 수신자에게 공개했습니다.": {
+    "en": "Shared with the selected recipients.",
+    "vi": "Đã chia sẻ với người nhận đã chọn.",
+    "id": "Dibagikan kepada penerima terpilih."
+  },
+  "선택한 수신자에게 공개": {
+    "en": "Share with selected recipients",
+    "vi": "Chia sẻ với người nhận đã chọn",
+    "id": "Bagikan kepada penerima terpilih"
+  },
+  "공개할 내용": {
+    "en": "Content to share",
+    "vi": "Nội dung chia sẻ",
+    "id": "Isi untuk dibagikan"
+  },
+  "수신자 직접 선택": {
+    "en": "Choose recipients",
+    "vi": "Chọn người nhận",
+    "id": "Pilih penerima"
+  },
+  "수신자 전체 선택": {
+    "en": "Select all recipients",
+    "vi": "Chọn tất cả người nhận",
+    "id": "Pilih semua penerima"
+  },
+  "전체 선택": {
+    "en": "Select all",
+    "vi": "Chọn tất cả",
+    "id": "Pilih semua"
+  },
+  "명 선택": {
+    "en": " selected",
+    "vi": " người đã chọn",
+    "id": " dipilih"
+  },
+  "선택할 수 있는 참여 중인 열람자가 없습니다.": {
+    "en": "There are no active readers to select.",
+    "vi": "Không có người xem đang tham gia để chọn.",
+    "id": "Tidak ada pembaca aktif yang dapat dipilih."
+  },
+  "이전 수신자 중 현재 참여하지 않는 열람자는 선택에서 제외했습니다.": {
+    "en": "Previous recipients who are no longer active have been excluded.",
+    "vi": "Người nhận cũ không còn tham gia đã được bỏ chọn.",
+    "id": "Penerima sebelumnya yang tidak lagi aktif telah dikecualikan."
+  },
+  "공개 내용 미리보기 →": {
+    "en": "Preview shared content →",
+    "vi": "Xem trước nội dung chia sẻ →",
+    "id": "Pratinjau isi berbagi →"
+  },
+  "열람할 수 없는 기록": {
+    "en": "Record unavailable",
+    "vi": "Không thể xem hồ sơ",
+    "id": "Catatan tidak tersedia"
+  },
+  "✓ 담당자가 확인하고 공개한 기록": {
+    "en": "✓ Checked and shared by the reviewer",
+    "vi": "✓ Người duyệt đã kiểm tra và chia sẻ",
+    "id": "✓ Diperiksa dan dibagikan peninjau"
+  },
+  "기록 표시가 중단되었습니다": {
+    "en": "Record display paused",
+    "vi": "Đã tạm dừng hiển thị hồ sơ",
+    "id": "Tampilan catatan dihentikan sementara"
+  },
+  "공개 범위 또는 참여 권한이 변경되었거나 연결을 확인하고 있습니다.": {
+    "en": "Sharing or membership access changed, or the connection is being verified.",
+    "vi": "Quyền chia sẻ hoặc tham gia đã thay đổi, hoặc đang kiểm tra kết nối.",
+    "id": "Akses berbagi atau keanggotaan berubah, atau koneksi sedang diverifikasi."
+  },
+  "돌봄 대상 등록": {
+    "en": "Add care recipient",
+    "vi": "Thêm người được chăm sóc",
+    "id": "Tambah penerima perawatan"
+  },
+  "돌봄 대상을 등록했습니다.": {
+    "en": "Care recipient added.",
+    "vi": "Đã thêm người được chăm sóc.",
+    "id": "Penerima perawatan ditambahkan."
+  },
+  "메모": {
+    "en": "Note",
+    "vi": "Ghi chú",
+    "id": "Catatan"
+  },
+  "선택": {
+    "en": "Optional",
+    "vi": "Không bắt buộc",
+    "id": "Opsional"
+  },
+  "관리번호는 등록 순서로 자동 부여됩니다. 동명이인도 등록할 수 있어요.": {
+    "en": "ID numbers are assigned in registration order. People with the same name may be registered.",
+    "vi": "Số quản lý được cấp theo thứ tự đăng ký. Có thể đăng ký người trùng tên.",
+    "id": "Nomor identifikasi diberikan sesuai urutan pendaftaran. Nama yang sama diperbolehkan."
+  },
+  "등록하기": {
+    "en": "Register",
+    "vi": "Đăng ký",
+    "id": "Daftarkan"
+  },
+  "작성 중인 변경 내용을 버릴까요?": {
+    "en": "Discard your unsaved changes?",
+    "vi": "Bỏ các thay đổi chưa lưu?",
+    "id": "Buang perubahan yang belum disimpan?"
+  },
+  "저장하지 않은 수정 내용이 사라집니다.": {
+    "en": "Unsaved edits will be lost.",
+    "vi": "Các chỉnh sửa chưa lưu sẽ mất.",
+    "id": "Perubahan yang belum disimpan akan hilang."
+  },
+  "이미 차단한 공개 기록은 차단 상태로 유지됩니다.": {
+    "en": "Previously blocked records will remain blocked.",
+    "vi": "Hồ sơ đã chặn sẽ tiếp tục bị chặn.",
+    "id": "Catatan yang sebelumnya diblokir tetap diblokir."
+  },
+  "계속 작성": {
+    "en": "Keep editing",
+    "vi": "Tiếp tục chỉnh sửa",
+    "id": "Lanjutkan mengedit"
+  },
+  "변경 내용 버리고 이동": {
+    "en": "Discard changes and leave",
+    "vi": "Bỏ thay đổi và chuyển trang",
+    "id": "Buang perubahan dan pindah"
+  },
+  "작업을 확인해 주세요": {
+    "en": "Confirm this action",
+    "vi": "Xác nhận thao tác",
+    "id": "Konfirmasi tindakan"
+  },
+  "처리했습니다.": {
+    "en": "Action completed.",
+    "vi": "Đã xử lý.",
+    "id": "Tindakan selesai."
+  },
+  "확인하고 진행": {
+    "en": "Confirm and continue",
+    "vi": "Xác nhận và tiếp tục",
+    "id": "Konfirmasi dan lanjutkan"
+  },
+  "이메일 인증을 완료했습니다. 로그인해 주세요.": {
+    "en": "Email verified. Please sign in.",
+    "vi": "Đã xác minh email. Vui lòng đăng nhập.",
+    "id": "Email terverifikasi. Silakan masuk."
+  },
+  "함께 만드는 돌봄 기록": {
+    "en": "Care records, created together",
+    "vi": "Cùng tạo hồ sơ chăm sóc",
+    "id": "Catatan perawatan, dibuat bersama"
+  },
+  "관찰을 기록으로,": {
+    "en": "Turn observations into records,",
+    "vi": "Từ quan sát thành hồ sơ,",
+    "id": "Dari pengamatan menjadi catatan,"
+  },
+  "기록을 신뢰로.": {
+    "en": "and records into trust.",
+    "vi": "từ hồ sơ thành niềm tin.",
+    "id": "dari catatan menjadi kepercayaan."
+  },
+  "작은 관찰이 빠짐없이 전달되도록.": {
+    "en": "So no small observation is lost.",
+    "vi": "Để không bỏ sót quan sát nhỏ nào.",
+    "id": "Agar tidak ada pengamatan kecil yang terlewat."
+  },
+  "작성자의 메모와 담당자의 검토를 연결합니다.": {
+    "en": "Connecting authors' notes with reviewers' checks.",
+    "vi": "Kết nối ghi chú của người viết với sự kiểm tra của người duyệt.",
+    "id": "Menghubungkan catatan penulis dengan pemeriksaan peninjau."
+  },
+  "01 관찰 메모": {
+    "en": "01 Observation notes",
+    "vi": "01 Ghi chú quan sát",
+    "id": "01 Catatan pengamatan"
+  },
+  "02 담당자 검토": {
+    "en": "02 Reviewer check",
+    "vi": "02 Kiểm duyệt",
+    "id": "02 Tinjauan penanggung jawab"
+  },
+  "03 승인 기록 공유": {
+    "en": "03 Share approved records",
+    "vi": "03 Chia sẻ hồ sơ đã duyệt",
+    "id": "03 Bagikan catatan disetujui"
+  },
+  "사람이 확인하고 완성하는 돌봄 기록": {
+    "en": "Care records checked and completed by people",
+    "vi": "Hồ sơ chăm sóc được con người kiểm tra và hoàn thiện",
+    "id": "Catatan perawatan diperiksa dan diselesaikan oleh manusia"
+  },
+  "함께 기록을 시작해요": {
+    "en": "Start recording together",
+    "vi": "Cùng bắt đầu ghi chép",
+    "id": "Mulai mencatat bersama"
+  },
+  "다시 만나 반가워요": {
+    "en": "Welcome back",
+    "vi": "Chào mừng trở lại",
+    "id": "Selamat datang kembali"
+  },
+  "기관의 돌봄 기록을 한곳에서 확인하세요.": {
+    "en": "View your organization's care records in one place.",
+    "vi": "Xem hồ sơ chăm sóc của cơ sở tại một nơi.",
+    "id": "Lihat catatan perawatan lembaga Anda di satu tempat."
+  },
+  "로컬 화면 QA · 합성 데이터만 사용합니다.": {
+    "en": "Local UI testing · Synthetic data only.",
+    "vi": "Kiểm tra giao diện cục bộ · Chỉ dùng dữ liệu giả lập.",
+    "id": "Uji tampilan lokal · Hanya data sintetis."
+  },
+  "모의 비밀번호는": {
+    "en": "The demo password is",
+    "vi": "Mật khẩu mô phỏng là",
+    "id": "Kata sandi demo adalah"
+  },
+  "입니다. 실제 계정과 무관합니다.": {
+    "en": ". This is unrelated to real accounts.",
+    "vi": ". Không liên quan đến tài khoản thật.",
+    "id": ". Tidak terkait dengan akun nyata."
+  },
+  "로그인 ID": {
+    "en": "Login ID",
+    "vi": "ID đăng nhập",
+    "id": "ID login"
+  },
+  "이메일": {
+    "en": "Email",
+    "vi": "Email",
+    "id": "Email"
+  },
+  "이메일 인증코드": {
+    "en": "Email verification code",
+    "vi": "Mã xác minh email",
+    "id": "Kode verifikasi email"
+  },
+  "비밀번호": {
+    "en": "Password",
+    "vi": "Mật khẩu",
+    "id": "Kata sandi"
+  },
+  "가입 후 역할을 변경하거나 겸임할 수 없습니다.": {
+    "en": "You cannot change or combine roles after signing up.",
+    "vi": "Không thể thay đổi hoặc kiêm nhiệm vai trò sau khi đăng ký.",
+    "id": "Anda tidak dapat mengubah atau merangkap peran setelah mendaftar."
+  },
+  "확인 중…": {
+    "en": "Checking…",
+    "vi": "Đang kiểm tra…",
+    "id": "Memeriksa…"
+  },
+  "이메일 인증": {
+    "en": "Verify email",
+    "vi": "Xác minh email",
+    "id": "Verifikasi email"
+  },
+  "가입하기": {
+    "en": "Sign up",
+    "vi": "Đăng ký",
+    "id": "Daftar"
+  },
+  "로그인 →": {
+    "en": "Sign in →",
+    "vi": "Đăng nhập →",
+    "id": "Masuk →"
+  },
+  "인증메일 재전송을 요청했습니다.": {
+    "en": "Verification email requested again.",
+    "vi": "Đã yêu cầu gửi lại email xác minh.",
+    "id": "Pengiriman ulang email verifikasi diminta."
+  },
+  "인증코드 재전송": {
+    "en": "Resend verification code",
+    "vi": "Gửi lại mã xác minh",
+    "id": "Kirim ulang kode verifikasi"
+  },
+  "이미 계정이 있어요": {
+    "en": "I already have an account",
+    "vi": "Tôi đã có tài khoản",
+    "id": "Saya sudah memiliki akun"
+  },
+  "처음 오셨나요? 회원가입": {
+    "en": "New here? Sign up",
+    "vi": "Chưa có tài khoản? Đăng ký",
+    "id": "Baru di sini? Daftar"
+  },
+  "모의 계정 선택": {
+    "en": "Choose a demo account",
+    "vi": "Chọn tài khoản mô phỏng",
+    "id": "Pilih akun demo"
+  },
+  "admin · 전체 역할": {
+    "en": "admin · All roles",
+    "vi": "admin · Tất cả vai trò",
+    "id": "admin · Semua peran"
+  },
+  "QA 시나리오 초기화 · 기존 합성 작업이 지워집니다": {
+    "en": "Reset QA scenario · Existing synthetic work will be erased",
+    "vi": "Đặt lại QA · Công việc giả lập hiện có sẽ bị xóa",
+    "id": "Atur ulang QA · Pekerjaan sintetis yang ada akan dihapus"
+  },
+  "기록이 있는 기관": {
+    "en": "Organization with records",
+    "vi": "Cơ sở có hồ sơ",
+    "id": "Lembaga dengan catatan"
+  },
+  "빈 기관부터 시작": {
+    "en": "Start with an empty organization",
+    "vi": "Bắt đầu với cơ sở trống",
+    "id": "Mulai dengan lembaga kosong"
+  },
+  "합성 데이터를 초기화할까요?": {
+    "en": "Reset synthetic data?",
+    "vi": "Đặt lại dữ liệu giả lập?",
+    "id": "Atur ulang data sintetis?"
+  },
+  "이 브라우저에서 만든 모의 계정과 기록이 초기화됩니다. 실제 서버에는 영향을 주지 않습니다.": {
+    "en": "Demo accounts and records created in this browser will be reset. Real servers are unaffected.",
+    "vi": "Tài khoản và hồ sơ giả lập trong trình duyệt sẽ được đặt lại. Máy chủ thật không bị ảnh hưởng.",
+    "id": "Akun dan catatan demo di browser ini akan diatur ulang. Server nyata tidak terpengaruh."
+  },
+  "초기화": {
+    "en": "Reset",
+    "vi": "Đặt lại",
+    "id": "Atur ulang"
+  },
+  "케어브릿지": {
+    "en": "CareBridge",
+    "vi": "CareBridge",
+    "id": "CareBridge"
+  },
+  "공개 중": {
+    "en": "Shared",
+    "vi": "Đang chia sẻ",
+    "id": "Dibagikan"
+  },
+  "열람 차단": {
+    "en": "Access blocked",
+    "vi": "Đã chặn quyền xem",
+    "id": "Akses diblokir"
+  },
+  "정정 중 · 열람 차단": {
+    "en": "Being corrected · Access blocked",
+    "vi": "Đang sửa · Chặn quyền xem",
+    "id": "Sedang diperbaiki · Akses diblokir"
+  },
+  "참여 거절": {
+    "en": "Membership declined",
+    "vi": "Từ chối tham gia",
+    "id": "Keanggotaan ditolak"
+  },
+  "구성원 퇴출": {
+    "en": "Member removed",
+    "vi": "Xóa thành viên khỏi nhóm",
+    "id": "Anggota dikeluarkan"
+  },
+  "메모 제출": {
+    "en": "Note submitted",
+    "vi": "Gửi ghi chú",
+    "id": "Catatan dikirim"
+  },
+  "검토 내용 수정": {
+    "en": "Review content edited",
+    "vi": "Sửa nội dung kiểm duyệt",
+    "id": "Isi tinjauan diedit"
+  },
+  "검토 보류": {
+    "en": "Review put on hold",
+    "vi": "Tạm hoãn kiểm duyệt",
+    "id": "Tinjauan ditunda"
+  },
+  "검토 내용 AI 검사": {
+    "en": "AI check of review content",
+    "vi": "Kiểm tra AI nội dung kiểm duyệt",
+    "id": "Pemeriksaan AI atas isi tinjauan"
+  },
+  "공개 내용·수신자 저장": {
+    "en": "Sharing content and recipients saved",
+    "vi": "Lưu nội dung và người nhận chia sẻ",
+    "id": "Isi berbagi dan penerima disimpan"
+  },
+  "기록 공개": {
+    "en": "Record shared",
+    "vi": "Chia sẻ hồ sơ",
+    "id": "Catatan dibagikan"
+  },
+  "기록 공개 차단": {
+    "en": "Record access blocked",
+    "vi": "Chặn quyền xem hồ sơ",
+    "id": "Akses catatan diblokir"
+  },
+  "관리 권한 이전 완료": {
+    "en": "Management transfer completed",
+    "vi": "Hoàn tất chuyển quyền quản lý",
+    "id": "Pengalihan pengelolaan selesai"
+  },
+  "관리 권한 이전 취소": {
+    "en": "Management transfer cancelled",
+    "vi": "Hủy chuyển quyền quản lý",
+    "id": "Pengalihan pengelolaan dibatalkan"
+  },
+  "기타 활동": {
+    "en": "Other activity",
+    "vi": "Hoạt động khác",
+    "id": "Aktivitas lainnya"
+  },
+  "기록 작성자": {
+    "en": "Note author",
+    "vi": "Người viết ghi chú",
+    "id": "Penulis catatan"
+  },
+  "관리자 · 검토자": {
+    "en": "Manager · Reviewer",
+    "vi": "Quản lý · Người duyệt",
+    "id": "Pengelola · Peninjau"
+  },
+  "기록 열람자": {
+    "en": "Record reader",
+    "vi": "Người xem hồ sơ",
+    "id": "Pembaca catatan"
+  },
+  "화면 언어": {
+    "en": "Display language",
+    "vi": "Ngôn ngữ giao diện",
+    "id": "Bahasa tampilan"
+  },
+  "요청을 처리하지 못했습니다. 아래 원본 오류를 확인하거나 다시 시도해 주세요.": {
+    "en": "The request could not be completed. Check the original error below or try again.",
+    "vi": "Không thể xử lý yêu cầu. Xem lỗi gốc bên dưới hoặc thử lại.",
+    "id": "Permintaan tidak dapat diselesaikan. Periksa pesan asli di bawah atau coba lagi."
+  },
+  "원본 오류": {
+    "en": "Original error",
+    "vi": "Lỗi gốc",
+    "id": "Pesan kesalahan asli"
+  },
+  "사유:": {
+    "en": "Reason:",
+    "vi": "Lý do:",
+    "id": "Alasan:"
+  },
+  "복사하지 못했습니다. 초대코드: {code}": {
+    "en": "Unable to copy. Invite code: {code}",
+    "vi": "Không thể sao chép. Mã mời: {code}",
+    "id": "Tidak dapat menyalin. Kode undangan: {code}"
+  },
+  "{name} 님을 퇴출하면 기록 열람·전송 권한이 종료됩니다. 이미 제출한 메모는 유지됩니다.": {
+    "en": "Removing {name} ends their access to view and submit records. Previously submitted notes are preserved.",
+    "vi": "Xóa {name} khỏi nhóm sẽ chấm dứt quyền xem và gửi hồ sơ. Ghi chú đã gửi được giữ lại.",
+    "id": "Mengeluarkan {name} akan mengakhiri akses melihat dan mengirim catatan. Catatan yang telah dikirim tetap disimpan."
+  },
+  "{count}건 대기": {
+    "en": "{count} pending",
+    "vi": "{count} đang chờ",
+    "id": "{count} menunggu"
+  },
+  "{selected} / {total}명 선택": {
+    "en": "{selected} / {total} selected",
+    "vi": "Đã chọn {selected} / {total} người",
+    "id": "{selected} / {total} dipilih"
+  },
+  "{count}그룹 · {role}": {
+    "en": "Group {count} · {role}",
+    "vi": "Nhóm {count} · {role}",
+    "id": "Grup {count} · {role}"
+  },
+  "보완이 필요한 메모 {count}건 →": {
+    "en": "Notes needing revision: {count} →",
+    "vi": "{count} ghi chú cần bổ sung →",
+    "id": "{count} catatan perlu diperbaiki →"
+  },
+  "CARE, CONNECTED.": {
+    "en": "CARE, CONNECTED.",
+    "vi": "CHĂM SÓC, KẾT NỐI.",
+    "id": "PERAWATAN TERHUBUNG."
+  },
+  "NEXT ACTION": {
+    "en": "NEXT ACTION",
+    "vi": "BƯỚC TIẾP THEO",
+    "id": "LANGKAH BERIKUTNYA"
+  },
+  "REVIEW INBOX": {
+    "en": "REVIEW INBOX",
+    "vi": "HỘP THƯ DUYỆT",
+    "id": "KOTAK TINJAUAN"
+  },
+  "OBSERVATION NOTE": {
+    "en": "OBSERVATION NOTE",
+    "vi": "GHI CHÚ QUAN SÁT",
+    "id": "CATATAN PENGAMATAN"
+  },
+  "YOUR WORKSPACE": {
+    "en": "YOUR WORKSPACE",
+    "vi": "NHÓM LÀM VIỆC",
+    "id": "RUANG KERJA ANDA"
+  },
+  "JOIN REQUESTS": {
+    "en": "JOIN REQUESTS",
+    "vi": "YÊU CẦU THAM GIA",
+    "id": "PERMINTAAN BERGABUNG"
+  },
+  "YOUR TEAM": {
+    "en": "YOUR TEAM",
+    "vi": "NHÓM CỦA BẠN",
+    "id": "TIM ANDA"
+  },
+  "CARE SUBJECTS": {
+    "en": "CARE SUBJECTS",
+    "vi": "NGƯỜI ĐƯỢC CHĂM SÓC",
+    "id": "PENERIMA PERAWATAN"
+  },
+  "SHARED WITH YOU": {
+    "en": "SHARED WITH YOU",
+    "vi": "CHIA SẺ VỚI BẠN",
+    "id": "DIBAGIKAN KEPADA ANDA"
+  },
+  "PUBLICATION DESK": {
+    "en": "PUBLICATION DESK",
+    "vi": "QUẢN LÝ CHIA SẺ",
+    "id": "KELOLA BERBAGI"
+  },
+  "ACTIVITY LOG": {
+    "en": "ACTIVITY LOG",
+    "vi": "LỊCH SỬ HOẠT ĐỘNG",
+    "id": "RIWAYAT AKTIVITAS"
+  },
+  "ACCOUNT & WORKSPACE": {
+    "en": "ACCOUNT & WORKSPACE",
+    "vi": "TÀI KHOẢN VÀ NHÓM",
+    "id": "AKUN DAN RUANG KERJA"
+  },
+  "다시 로그인해 주세요.": {
+    "en": "Please sign in again.",
+    "vi": "Vui lòng đăng nhập lại.",
+    "id": "Silakan masuk kembali."
+  },
+  "로그인이 종료되었습니다.": {
+    "en": "You have been signed out.",
+    "vi": "Bạn đã đăng xuất.",
+    "id": "Anda telah keluar."
+  },
+  "로그인이 종료되었습니다. 다시 로그인해 주세요.": {
+    "en": "Your session ended. Please sign in again.",
+    "vi": "Phiên đã kết thúc. Vui lòng đăng nhập lại.",
+    "id": "Sesi berakhir. Silakan masuk kembali."
+  },
+  "로그인이 필요합니다.": {
+    "en": "Please sign in.",
+    "vi": "Vui lòng đăng nhập.",
+    "id": "Silakan masuk."
+  },
+  "로그인 정보를 확인해 주세요.": {
+    "en": "Check your login details.",
+    "vi": "Kiểm tra thông tin đăng nhập.",
+    "id": "Periksa informasi login Anda."
+  },
+  "이메일 또는 비밀번호가 올바르지 않습니다.": {
+    "en": "Incorrect email or password.",
+    "vi": "Email hoặc mật khẩu không đúng.",
+    "id": "Email atau kata sandi salah."
+  },
+  "비밀번호가 필요합니다.": {
+    "en": "Enter your password.",
+    "vi": "Nhập mật khẩu.",
+    "id": "Masukkan kata sandi."
+  },
+  "이미 가입된 이메일입니다.": {
+    "en": "This email is already registered.",
+    "vi": "Email này đã được đăng ký.",
+    "id": "Email ini sudah terdaftar."
+  },
+  "이메일 인증이 필요합니다.": {
+    "en": "Verify your email first.",
+    "vi": "Cần xác minh email.",
+    "id": "Verifikasi email terlebih dahulu."
+  },
+  "이메일로 받은 인증코드를 입력해 주세요.": {
+    "en": "Enter the verification code sent to your email.",
+    "vi": "Nhập mã xác minh gửi đến email của bạn.",
+    "id": "Masukkan kode verifikasi yang dikirim ke email Anda."
+  },
+  "서버 역할이 변경되었습니다. 다시 로그인해 주세요.": {
+    "en": "Your server role changed. Please sign in again.",
+    "vi": "Vai trò trên máy chủ đã thay đổi. Vui lòng đăng nhập lại.",
+    "id": "Peran di server berubah. Silakan masuk kembali."
+  },
+  "가입 역할이 연결되지 않은 계정입니다. 담당자에게 역할 배정을 문의해 주세요.": {
+    "en": "This account has no assigned role. Contact your manager.",
+    "vi": "Tài khoản chưa được gán vai trò. Liên hệ người quản lý.",
+    "id": "Akun ini belum memiliki peran. Hubungi pengelola."
+  },
+  "접근 확인 유효시간이 지났습니다. 다시 연결해 주세요.": {
+    "en": "Access verification expired. Please reconnect.",
+    "vi": "Xác minh quyền truy cập đã hết hạn. Vui lòng kết nối lại.",
+    "id": "Verifikasi akses kedaluwarsa. Hubungkan kembali."
+  },
+  "실시간 접근 확인 연결이 종료되었습니다.": {
+    "en": "The live access verification connection ended.",
+    "vi": "Kết nối xác minh quyền truy cập trực tiếp đã kết thúc.",
+    "id": "Koneksi verifikasi akses langsung berakhir."
+  },
+  "실시간 연결이 종료되었습니다.": {
+    "en": "The live connection ended.",
+    "vi": "Kết nối trực tiếp đã kết thúc.",
+    "id": "Koneksi langsung berakhir."
+  },
+  "작업 그룹 접근 권한이 종료되었습니다.": {
+    "en": "Your workspace access has ended.",
+    "vi": "Quyền truy cập nhóm đã kết thúc.",
+    "id": "Akses ruang kerja Anda berakhir."
+  },
+  "현재 작업 그룹의 권한을 다시 확인해 주세요.": {
+    "en": "Please verify your workspace access again.",
+    "vi": "Vui lòng kiểm tra lại quyền truy cập nhóm.",
+    "id": "Periksa kembali akses ruang kerja Anda."
+  },
+  "자료를 찾을 수 없습니다.": {
+    "en": "The requested record could not be found.",
+    "vi": "Không tìm thấy dữ liệu yêu cầu.",
+    "id": "Data yang diminta tidak ditemukan."
+  },
+  "내용이 변경됐습니다. 다시 조회해 주세요.": {
+    "en": "The content changed. Please reload it.",
+    "vi": "Nội dung đã thay đổi. Vui lòng tải lại.",
+    "id": "Isi telah berubah. Muat ulang."
+  },
+  "이미 다른 기관에 소속되어 있습니다.": {
+    "en": "You already belong to another organization.",
+    "vi": "Bạn đã thuộc một cơ sở khác.",
+    "id": "Anda sudah tergabung dalam lembaga lain."
+  },
+  "이미 처리된 요청입니다.": {
+    "en": "This request has already been processed.",
+    "vi": "Yêu cầu này đã được xử lý.",
+    "id": "Permintaan ini sudah diproses."
+  },
+  "이미 참여 중입니다.": {
+    "en": "You are already a member.",
+    "vi": "Bạn đã tham gia.",
+    "id": "Anda sudah menjadi anggota."
+  },
+  "유효하지 않은 코드입니다.": {
+    "en": "The invite code is invalid.",
+    "vi": "Mã mời không hợp lệ.",
+    "id": "Kode undangan tidak valid."
+  },
+  "수신자를 명시적으로 선택해 주세요.": {
+    "en": "Please select recipients.",
+    "vi": "Vui lòng chọn người nhận.",
+    "id": "Pilih penerima."
+  },
+  "활성 열람자만 수신자로 선택할 수 있습니다.": {
+    "en": "Only active readers can be selected.",
+    "vi": "Chỉ có thể chọn người xem đang tham gia.",
+    "id": "Hanya pembaca aktif yang dapat dipilih."
+  },
+  "확정 버전이 변경됐습니다.": {
+    "en": "The confirmed version changed.",
+    "vi": "Phiên bản đã xác nhận đã thay đổi.",
+    "id": "Versi yang dikonfirmasi berubah."
+  },
+  "이미 공개된 기록입니다. 정정 기능을 이용해 주세요.": {
+    "en": "This record is already shared. Use the correction action.",
+    "vi": "Hồ sơ đã được chia sẻ. Hãy dùng chức năng chỉnh sửa.",
+    "id": "Catatan sudah dibagikan. Gunakan fungsi koreksi."
+  },
+  "공개 기록을 다시 조회해 주세요.": {
+    "en": "Please reload shared records.",
+    "vi": "Vui lòng tải lại hồ sơ chia sẻ.",
+    "id": "Muat ulang catatan dibagikan."
+  },
+  "작업 그룹을 다시 조회해 주세요.": {
+    "en": "Please reload the workspace.",
+    "vi": "Vui lòng tải lại nhóm làm việc.",
+    "id": "Muat ulang ruang kerja."
+  },
+  "참여 요청을 다시 조회해 주세요.": {
+    "en": "Please reload join requests.",
+    "vi": "Vui lòng tải lại yêu cầu tham gia.",
+    "id": "Muat ulang permintaan bergabung."
+  },
+  "현재 원문으로 초안을 다시 생성해 주세요.": {
+    "en": "Regenerate a draft from the current source.",
+    "vi": "Tạo lại bản nháp từ bản gốc hiện tại.",
+    "id": "Buat ulang draf dari sumber saat ini."
+  },
+  "현재 원문에 연결된 생성본이 필요합니다.": {
+    "en": "Generate a draft linked to the current source.",
+    "vi": "Cần bản nháp liên kết với bản gốc hiện tại.",
+    "id": "Diperlukan draf dari sumber saat ini."
+  },
+  "초안을 확인한 뒤 제출해 주세요.": {
+    "en": "Check the draft before submitting.",
+    "vi": "Kiểm tra bản nháp trước khi gửi.",
+    "id": "Periksa draf sebelum mengirim."
+  },
+  "현재 최종 검토본의 유효한 QA 결과가 필요합니다.": {
+    "en": "Run the check on the current final review content first.",
+    "vi": "Cần kiểm tra nội dung duyệt cuối hiện tại trước.",
+    "id": "Jalankan pemeriksaan isi tinjauan akhir saat ini terlebih dahulu."
+  },
+  "AI 초안 생성에 실패했습니다.": {
+    "en": "Unable to generate an AI draft.",
+    "vi": "Không thể tạo bản nháp AI.",
+    "id": "Tidak dapat membuat draf AI."
+  },
+  "전사에 실패했습니다.": {
+    "en": "Unable to transcribe the audio.",
+    "vi": "Không thể chép lời âm thanh.",
+    "id": "Tidak dapat mentranskripsikan audio."
+  },
+  "최종본 QA에 실패했습니다.": {
+    "en": "Unable to check the final content.",
+    "vi": "Không thể kiểm tra nội dung cuối.",
+    "id": "Tidak dapat memeriksa isi akhir."
+  },
+  "원문에 연결된 초안 응답을 확인하지 못했습니다.": {
+    "en": "Unable to verify the draft against the source.",
+    "vi": "Không thể xác minh bản nháp với bản gốc.",
+    "id": "Tidak dapat memverifikasi draf terhadap sumber."
+  },
+  "음성 인식 결과를 확인하지 못했습니다.": {
+    "en": "Unable to verify the transcription result.",
+    "vi": "Không thể xác minh kết quả chép lời.",
+    "id": "Tidak dapat memverifikasi hasil transkripsi."
+  },
+  "최종 검사 응답의 버전·형식을 확인하지 못했습니다.": {
+    "en": "Unable to verify the final check response.",
+    "vi": "Không thể xác minh phản hồi kiểm tra cuối.",
+    "id": "Tidak dapat memverifikasi respons pemeriksaan akhir."
+  },
+  "오디오를 읽지 못했습니다.": {
+    "en": "Unable to read the audio.",
+    "vi": "Không thể đọc âm thanh.",
+    "id": "Tidak dapat membaca audio."
+  },
+  "사용할 수 있는 마이크를 찾지 못했어요. 마이크가 연결돼 있는지 확인하거나, 텍스트로 질문해 주세요.": {
+    "en": "No microphone found. Check the connection or enter text instead.",
+    "vi": "Không tìm thấy micrô. Kiểm tra kết nối hoặc nhập văn bản.",
+    "id": "Mikrofon tidak ditemukan. Periksa koneksi atau masukkan teks."
+  },
+  "마이크 사용이 허용되지 않았어요. 주소창의 사이트 설정에서 마이크를 허용한 뒤 다시 시도해 주세요.": {
+    "en": "Microphone access was denied. Allow it in the site's browser settings and try again.",
+    "vi": "Quyền dùng micrô bị từ chối. Cho phép trong cài đặt trang rồi thử lại.",
+    "id": "Akses mikrofon ditolak. Izinkan di pengaturan situs browser lalu coba lagi."
+  },
+  "마이크를 사용할 수 없어요. 다른 프로그램이 마이크를 쓰고 있는지 확인해 주세요.": {
+    "en": "The microphone is unavailable. Check whether another app is using it.",
+    "vi": "Không thể dùng micrô. Kiểm tra xem ứng dụng khác có đang sử dụng không.",
+    "id": "Mikrofon tidak tersedia. Periksa apakah sedang digunakan aplikasi lain."
+  },
+  "마이크를 시작하지 못했어요. 텍스트로 질문해 주세요.": {
+    "en": "Unable to start the microphone. Enter text instead.",
+    "vi": "Không thể bật micrô. Vui lòng nhập văn bản.",
+    "id": "Tidak dapat memulai mikrofon. Masukkan teks."
+  },
+  "이 브라우저에서는 음성 녹음을 지원하지 않습니다.": {
+    "en": "This browser does not support audio recording.",
+    "vi": "Trình duyệt không hỗ trợ ghi âm.",
+    "id": "Browser ini tidak mendukung perekaman audio."
+  },
+  "녹음 중 오류가 발생했습니다.": {
+    "en": "An error occurred while recording.",
+    "vi": "Có lỗi khi ghi âm.",
+    "id": "Terjadi kesalahan saat merekam."
+  },
+  "녹음된 소리가 없어요. 다시 녹음해 주세요.": {
+    "en": "No audio was recorded. Please try again.",
+    "vi": "Không có âm thanh được ghi. Vui lòng ghi lại.",
+    "id": "Tidak ada audio terekam. Rekam kembali."
+  },
+  "녹음 파일을 변환하지 못했습니다. 짧게 다시 녹음해 주세요.": {
+    "en": "Unable to convert the recording. Try a shorter recording.",
+    "vi": "Không thể chuyển đổi bản ghi. Thử ghi lại ngắn hơn.",
+    "id": "Tidak dapat mengonversi rekaman. Coba rekaman lebih pendek."
+  },
+  "녹음이 너무 깁니다.": {
+    "en": "The recording is too long.",
+    "vi": "Bản ghi quá dài.",
+    "id": "Rekaman terlalu panjang."
+  },
+  "Failed to fetch": {
+    "en": "Unable to connect. Check your network.",
+    "vi": "Không thể kết nối. Kiểm tra mạng.",
+    "id": "Tidak dapat terhubung. Periksa jaringan."
+  },
+  "NetworkError when attempting to fetch resource.": {
+    "en": "Unable to connect. Check your network.",
+    "vi": "Không thể kết nối. Kiểm tra mạng.",
+    "id": "Tidak dapat terhubung. Periksa jaringan."
+  },
+  "WRITING GUIDE": {
+    "en": "WRITING GUIDE",
+    "vi": "HƯỚNG DẪN GHI CHÉP",
+    "id": "PANDUAN MENULIS"
+  },
+  "MY NOTES": {
+    "en": "MY NOTES",
+    "vi": "GHI CHÚ CỦA TÔI",
+    "id": "CATATAN SAYA"
+  },
+  "PEOPLE": {
+    "en": "PEOPLE",
+    "vi": "THÀNH VIÊN",
+    "id": "ANGGOTA"
+  },
+  "CARE RECIPIENTS": {
+    "en": "CARE RECIPIENTS",
+    "vi": "NGƯỜI ĐƯỢC CHĂM SÓC",
+    "id": "PENERIMA PERAWATAN"
+  }
+}
