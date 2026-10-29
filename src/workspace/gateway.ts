@@ -214,6 +214,7 @@ export class HttpGateway implements Gateway {
     const saved=await this.request<{version:number}>(path+"/review",{expectedVersion:version,decision:"edit",content,...(reason.trim()?{reason}:{})},session);
     try {
       const result=await this.request<{version:number;qa:{status:string;qa:ApiQa}}>(path+"/check",{expectedVersion:saved.version},session);
+      if (result.version!==saved.version || !["hold","review_required"].includes(result.qa?.status) || !Array.isArray(result.qa?.qa?.issues)) throw new ApiError("최종 검사 응답의 버전·형식을 확인하지 못했습니다.",502,"CAREBRIDGE_BAD_RESPONSE");
       return {version:saved.version,content,status:result.qa.status,warnings:result.qa.qa.issues?.map(i=>i.message) ?? []};
     } catch(error) {
       throw new ApiError((error as Error).message,error instanceof ApiError?error.status:0,error instanceof ApiError?error.code:"",{savedVersion:saved.version});

@@ -365,6 +365,7 @@ export default function WorkspaceApp() {
   }
   async function transcribe(blob: Blob) {
     if(!session || !gateway.transcribe) return;
+    if(blob.size>44+16000*2*30) throw new Error("음성 메모는 30초 이하로 준비해 주세요.");
     const e=epoch.current,id=++generation.current;
     setBusy(true);setError("");
     try {
@@ -922,6 +923,7 @@ export default function WorkspaceApp() {
                       </div>
                       {!isMock && <>
                         <label><input type="checkbox" checked={dataUse} onChange={e=>setDataUse(e.target.checked)} /> 실제 개인정보가 없는 연습용 메모·음성임을 확인했습니다.</label>
+                        <p className="cb-muted">음성은 30초 이내로 녹음하거나 선택해 주세요. 받아쓴 원문은 생성 전에 직접 확인합니다.</p>
                         <div className="cb-modal-actions">
                           <button className="cb-secondary" disabled={busy || !dataUse} onClick={()=>void record()}>{recording?"녹음 중지 · 받아쓰기":"음성 메모 녹음"}</button>
                           <label>음성 파일 선택<input type="file" accept="audio/*,.wav,.webm,.mp3,.m4a" disabled={busy || recording || !dataUse} onChange={async e=>{
