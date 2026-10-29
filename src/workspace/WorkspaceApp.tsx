@@ -15,6 +15,8 @@ import { blobToBase64, startRecording, toPcmWav, type Recorder } from "../voice"
 import { Brand, Badge, Empty, Heading, Modal } from "./ui";
 import Login from "./Login";
 import "./workspace.css";
+import "./renewal.css";
+import { WorkspaceIcon } from "./WorkspaceIcon";
 
 type Page =
   | "home"
@@ -26,17 +28,6 @@ type Page =
   | "publications"
   | "history"
   | "settings";
-const icons = {
-  home: "▦",
-  compose: "＋",
-  notes: "▤",
-  requests: "⇥",
-  members: "♧",
-  subjects: "◎",
-  publications: "↗",
-  history: "◷",
-  settings: "⚙",
-};
 const labels = {
   home: "업무 현황",
   compose: "메모 작성",
@@ -49,11 +40,11 @@ const labels = {
   settings: "설정",
 };
 const menus: Record<Role, Page[]> = {
-  author: ["home", "compose", "notes", "settings"],
+  author: ["compose", "notes", "home", "settings"],
   reviewer: [
-    "home",
     "notes",
     "publications",
+    "home",
     "requests",
     "members",
     "subjects",
@@ -245,9 +236,11 @@ export default function WorkspaceApp() {
   }
   function login(s: Session) {
     clearViews();
+    setMobile(false);
+    window.scrollTo({ top: 0 });
     setSession(s);
     setRole(s.user.role);
-    setPage(s.user.role === "reader" ? "publications" : "home");
+    setPage(s.user.role === "reader" ? "publications" : s.user.role === "author" ? "compose" : "notes");
   }
   function navigate(p: Page) {
     recorder.current?.cancel();recorder.current=null;setRecording(false);
@@ -278,7 +271,7 @@ export default function WorkspaceApp() {
     setBusy(true);
     try {
       if (gateway.selectRole) login(await gateway.selectRole(session, next));
-      else { setRole(next); setPage(next === "reader" ? "publications" : "home"); }
+      else { setRole(next); setPage(next === "reader" ? "publications" : next === "author" ? "compose" : "notes"); }
     } catch (err) { setError((err as Error).message); setRetry(r=>r+1); }
     finally { setBusy(false); }
   }
@@ -487,26 +480,27 @@ export default function WorkspaceApp() {
     );
   }
   return (
-    <div className="cb-app">
+    <div className={`cb-app cb-role-${role} cb-page-${page}`}>
       <aside className={`cb-sidebar ${mobile ? "open" : ""}`}>
         <Brand />
         <div className="cb-workspace">
-          <span>▥</span>
+          <WorkspaceIcon name="building" />
           <div>
             <strong>{data?.workspace?.name || "작업 그룹"}</strong>
             <small>기관 작업 공간</small>
           </div>
         </div>
-        <small className="cb-nav-label">WORKSPACE</small>
+        <small className="cb-nav-label">매일의 돌봄</small>
         <nav aria-label="주 메뉴">
           {menus[role].map((p) => (
             <button
               key={p}
               aria-label={pageLabel(p)}
-              className={page === p ? "active" : ""}
+              aria-current={page === p ? "page" : undefined}
+              className={`${page === p ? "active" : ""} ${p === "requests" || p === "settings" ? "cb-nav-section" : ""}`}
               onClick={() => navigate(p)}
             >
-              <span className="cb-nav-icon">{icons[p]}</span>
+              <WorkspaceIcon name={p} />
               {pageLabel(p)}
               {p === "requests" && pendingMembers.length > 0 && (
                 <b>{pendingMembers.length}</b>
@@ -864,6 +858,10 @@ export default function WorkspaceApp() {
                   </Heading>
                   <div className="cb-compose-grid">
                     <section className="cb-card cb-form-card">
+                      <div className="cb-compose-status">
+                        <span>오늘의 관찰을 기록해 주세요</span>
+                        {counts.held > 0 && <button onClick={() => { navigate("notes"); setFilter("held"); }}>보완이 필요한 메모 {counts.held}건 →</button>}
+                      </div>
                       <div className="cb-form-row">
                         <label>
                           돌봄 대상
@@ -909,7 +907,7 @@ export default function WorkspaceApp() {
                       <label>
                         원문 메모
                         <textarea
-                          rows={8}
+                          rows={12}
                           maxLength={4000}
                           value={draft.source}
                           onChange={(e) => {
@@ -1050,7 +1048,7 @@ export default function WorkspaceApp() {
                         ],
                       ].map(([icon, title, text]) => (
                         <div className="cb-guide-item" key={title}>
-                          <span>{icon}</span>
+                          <WorkspaceIcon name={icon === "◎" ? "subjects" : icon === "◷" ? "history" : icon === "♧" ? "members" : "notes"} />
                           <div>
                             <h3>{title}</h3>
                             <p>{text}</p>
@@ -1058,7 +1056,7 @@ export default function WorkspaceApp() {
                         </div>
                       ))}
                       <div className="cb-notice">
-                        음성 입력은 전사 API 계약 확정 후 연결할 예정입니다.
+                        {isMock ? "이 미리보기에서는 합성 메모로 작성 흐름을 확인할 수 있습니다." : "음성으로도 기록할 수 있어요. 받아쓴 내용을 확인한 뒤 초안을 만들어 주세요."}
                       </div>
                     </aside>
                   </div>
@@ -1070,8 +1068,13 @@ export default function WorkspaceApp() {
                     eyebrow={role === "reviewer" ? "REVIEW INBOX" : "MY NOTES"}
                     title={pageLabel("notes")}
                   >
-                    각 제출 건의 내용과 진행 상황을 확인하세요.
+                    {role === "reviewer" ? "도착한 메모를 확인하고, 검토를 마친 기록을 전달하세요." : "내가 남긴 기록과 담당자의 검토 결과를 확인하세요."}
                   </Heading>
+                  {role === "reviewer" && <div className="cb-review-summary" aria-label="검토 진행 상황">
+                    {([['pending', '검토 대기', 'notes'], ['held', '보류 중', 'history'], ['confirmed', '검토 완료', 'publications']] as const).map(([status, label, icon]) =>
+                      <button key={status} aria-pressed={filter === status} onClick={() => setFilter(status)}><WorkspaceIcon name={icon} /><span>{label}</span><strong>{counts[status]}</strong></button>
+                    )}
+                  </div>}
                   <section className="cb-card">
                     <div className="cb-toolbar">
                       <div className="cb-tabs">

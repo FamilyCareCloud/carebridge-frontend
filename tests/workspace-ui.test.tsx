@@ -35,6 +35,15 @@ async function login(id: string) {
 }
 
 describe("CareBridge role workspace screens", () => {
+  it("opens the author editor directly and keeps input when visiting their notes", async () => {
+    render(<WorkspaceApp />);
+    await login("author");
+    const memo = await screen.findByLabelText("원문 메모");
+    fireEvent.change(memo, { target: { value: "작성 중인 합성 관찰" } });
+    fireEvent.click(screen.getByRole("button", { name: "내 메모", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "메모 작성", exact: true }));
+    expect((screen.getByLabelText("원문 메모") as HTMLTextAreaElement).value).toBe("작성 중인 합성 관찰");
+  });
   it("hides an open reader detail without refresh when the reviewer revokes it", async () => {
     render(<WorkspaceApp />);
     await login("reader");
@@ -100,7 +109,8 @@ describe("CareBridge role workspace screens", () => {
       changed=onChange;return subscribe(s,onChange,failed,ready);
     });
     render(<WorkspaceApp />);await login("author");
-    await screen.findByRole("button",{name:"＋ 새 메모 작성"});
+    await screen.findByLabelText("원문 메모");
+    fireEvent.click(screen.getByRole("button", { name: "내 메모", exact: true }));
     const state=await api.snapshot(await api.login("author","demo"),"author");
     const stale=structuredClone(state),fresh=structuredClone(state);
     stale.submissions[0].final="오래된 재조회 내용";
@@ -121,9 +131,7 @@ describe("CareBridge role workspace screens", () => {
   it("requires generation and explicit submission and preserves manual text on regeneration cancellation", async () => {
     render(<WorkspaceApp />);
     await login("author");
-    fireEvent.click(
-      await screen.findByRole("button", { name: "＋ 새 메모 작성" }),
-    );
+    await screen.findByLabelText("원문 메모");
     fireEvent.change(screen.getByLabelText("돌봄 대상"), {
       target: { value: "s1" },
     });
@@ -151,7 +159,7 @@ describe("CareBridge role workspace screens", () => {
   it("forces explicit recipients and a separate preview before publication", async () => {
     render(<WorkspaceApp />);
     await login("reviewer");
-    await screen.findByText("오늘의 기록, 함께 확인해요");
+    await screen.findByRole("heading", { name: "검토함" });
     const reviewer = await api.login("reviewer", "demo");
     await act(async () => {
       await api.execute(reviewer, "reviewer", {
