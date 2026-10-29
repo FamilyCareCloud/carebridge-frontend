@@ -59,7 +59,7 @@ it('enables real generation after input confirmation and keeps its ID and warnin
   vi.spyOn(gateway,'generate').mockResolvedValue({text:'주스를 마셨습니다.',source:'Drank juice.',generationId:'gpu-generation',warnings:['원문을 확인해 주세요.']});
   const execute=vi.spyOn(gateway,'execute');
   render(<WorkspaceApp />);await login('author');
-  fireEvent.click(await screen.findByRole('button',{name:'＋ 새 메모 작성'}));
+  await screen.findByLabelText('원문 메모');
   fireEvent.change(screen.getByLabelText('돌봄 대상'),{target:{value:'s1'}});
   fireEvent.change(screen.getByLabelText('원문 메모'),{target:{value:'Drank juice.'}});
   fireEvent.change(screen.getByLabelText('작성 언어'),{target:{value:'en'}});
@@ -75,7 +75,7 @@ it('enables real generation after input confirmation and keeps its ID and warnin
 it('preserves a typed memo when actual generation fails', async()=>{
   vi.spyOn(gateway,'generate').mockRejectedValue(new Error('AI 서버에 연결하지 못했습니다.'));
   render(<WorkspaceApp />);await login('author');
-  fireEvent.click(await screen.findByRole('button',{name:'＋ 새 메모 작성'}));
+  await screen.findByLabelText('원문 메모');
   fireEvent.change(screen.getByLabelText('원문 메모'),{target:{value:'원문을 보존합니다.'}});
   fireEvent.click(screen.getByRole('checkbox',{name:/연습용 메모/}));
   fireEvent.click(screen.getByRole('button',{name:'✧ 초안 만들기'}));
