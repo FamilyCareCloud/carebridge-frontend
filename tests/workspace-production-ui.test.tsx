@@ -24,6 +24,19 @@ it('public login has no admin or QA guidance and still submits the literal ID', 
   await login('admin');
   expect(spy).toHaveBeenCalledWith('admin', 'demo');
 });
+it('returns to login with an explanation when realtime authentication is rejected', async () => {
+  let disconnect!: (message?: string, status?: number) => void;
+  const subscribe=gateway.subscribe.bind(gateway);
+  vi.spyOn(gateway,'subscribe').mockImplementation((s,change,failed,ready)=>{
+    disconnect=failed;return subscribe(s,change,failed,ready);
+  });
+  render(<WorkspaceApp />);await login('author');
+  const { act }=await import('@testing-library/react');
+  act(()=>disconnect('로그인이 종료되었습니다. 다시 로그인해 주세요.',401));
+  expect(await screen.findByRole('button',{name:'로그인 →'})).toBeTruthy();
+  expect(screen.getByRole('alert').textContent).toContain('로그인이 종료');
+  expect(screen.queryByRole('navigation',{name:'주 메뉴'})).toBeNull();
+});
 it('ordinary users never receive a role selector in settings', async () => {
   render(<WorkspaceApp />); await login('author');
   fireEvent.click(screen.getByRole('button', { name: '설정' }));

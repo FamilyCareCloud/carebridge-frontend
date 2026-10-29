@@ -5,7 +5,7 @@ type Options = {
   request:<T>(path:string,body?:unknown,signal?:AbortSignal)=>Promise<T>;
   openStream:(path:string,signal:AbortSignal)=>Promise<Response>;
   proof:(id:string|null)=>void;
-  onChange:()=>void; onDisconnect:(message?:string)=>void; onConnected:()=>void;
+  onChange:()=>void; onDisconnect:(message?:string,status?:number)=>void; onConnected:()=>void;
 };
 /** No active record may be rendered until an authenticated revalidate event. */
 export function subscribeWorkspace(o: Options): ()=>void {
@@ -18,9 +18,9 @@ export function subscribeWorkspace(o: Options): ()=>void {
   let verifiedState:string|undefined;
   function clear() {clearTimeout(deadline);clearTimeout(poll);clearInterval(renewal);}
   function stop() {clear();controller.abort();socket?.close();o.proof(null);}
-  function fail(message="실시간 접근 확인 연결이 종료되었습니다.") {
+  function fail(message="실시간 접근 확인 연결이 종료되었습니다.",status?:number) {
     if(controller.signal.aborted) return;
-    stop();o.onDisconnect(message);
+    stop();o.onDisconnect(message,status);
   }
   function arm(ms:number) {
     clearTimeout(deadline);
@@ -82,7 +82,7 @@ export function subscribeWorkspace(o: Options): ()=>void {
       try {
         const proof=await o.request<Ticket>(ticketPath,{},controller.signal);
         if(!controller.signal.aborted && socket?.readyState===WebSocket.OPEN) socket.send(JSON.stringify({action:"revalidate",ticket:proof.ticket}));
-      } catch(e) {fail((e as Error).message);} finally {renewing=false;}
+      } catch(e) {fail((e as Error).message,(e as {status?:number}).status);} finally {renewing=false;}
     }
     socket.onopen=()=>{
       void revalidate();
@@ -119,7 +119,7 @@ export function subscribeWorkspace(o: Options): ()=>void {
       previous=signature;
       // Pending membership has no sensitive business data and cannot subscribe.
       poll=setTimeout(()=>{arm(45000);void discover();},5000);
-    } catch(e) {fail((e as Error).message);}
+    } catch(e) {fail((e as Error).message,(e as {status?:number}).status);}
   }
   arm(45000);void discover();
   return stop;
