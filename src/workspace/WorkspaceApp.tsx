@@ -159,7 +159,7 @@ export default function WorkspaceApp() {
       setData(null);
       void refresh();
     };
-    const disconnect = (message?: string) => {
+    const disconnect = (message?: string, status?: number) => {
       if (e !== epoch.current) return;
       connected.current = false;
       generation.current++;
@@ -168,6 +168,7 @@ export default function WorkspaceApp() {
       setOffline(true);
       setData(null);
       if (message) setError(message);
+      if (status===401) setSession(null);
     };
     const stop = gateway.subscribe(session, invalidate, disconnect, () => {
       if (e !== epoch.current) return;
@@ -397,7 +398,7 @@ export default function WorkspaceApp() {
     setPreview(false);
     setSelected(null);
   }
-  if (!session) return <Login onSession={login} />;
+  if (!session) return <Login onSession={login} sessionError={error} />;
   const user = session.user,
     active =
       !!data?.workspace &&

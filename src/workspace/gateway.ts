@@ -46,22 +46,70 @@ export class HttpGateway implements Gateway {
   private base: string;
   private snapshots = new Map<string, Snapshot>();
   private proofs = new Map<string, string>();
+  private renewals = new WeakMap<Session, Promise<void>>();
+  private ended = new WeakSet<Session>();
   constructor(base: string) { this.base = base.replace(/\/$/, ""); }
-  async request<T>(path: string, body?: unknown, session?: Session, signal?: AbortSignal, method = body === undefined ? "GET" : "POST"): Promise<T> {
+  private async renew(session: Session): Promise<void> {
+    if (this.ended.has(session) || !session.refreshToken) throw new ApiError("다시 로그인해 주세요.",401,"SESSION_INVALID");
+    const pending=this.renewals.get(session);
+    if(pending) return pending;
+    const renewal=(async()=>{
+      try {
+        const result=await this.request<{accessToken:string;expiresAt:string;refreshToken?:string;user:ApiUser}>("/auth/refresh",{refreshToken:session.refreshToken});
+        if(!result.accessToken || !Number.isFinite(Date.parse(result.expiresAt)) || Date.parse(result.expiresAt)<=Date.now() || result.user?.userId!==session.user.id) throw new ApiError("다시 로그인해 주세요.",401,"SESSION_INVALID");
+        if(this.ended.has(session)) {
+          // logout waits for this renewal and must revoke its freshly issued
+          // token as well. No protected request or cache can use it locally.
+          session.token=result.accessToken;
+          throw new ApiError("로그인이 종료되었습니다.",401,"SESSION_INVALID");
+        }
+        const old=session.token, snapshot=this.snapshots.get(old), proof=this.proofs.get(old);
+        this.snapshots.delete(old);this.proofs.delete(old);
+        session.token=result.accessToken;session.expiresAt=result.expiresAt;
+        if(result.refreshToken) session.refreshToken=result.refreshToken;
+        if(snapshot)this.snapshots.set(session.token,snapshot);
+        if(proof)this.proofs.set(session.token,proof);
+      } catch(error) {
+        if(error instanceof ApiError && error.status===401) {
+          this.ended.add(session);this.snapshots.delete(session.token);this.proofs.delete(session.token);
+        }
+        throw error;
+      } finally {this.renewals.delete(session);}
+    })();
+    this.renewals.set(session,renewal);
+    return renewal;
+  }
+  private async prepare(session: Session, signal?:AbortSignal) {
+    if(this.ended.has(session))throw new ApiError("로그인이 종료되었습니다. 다시 로그인해 주세요.",401,"SESSION_INVALID");
+    if(session.refreshToken && session.expiresAt && Date.parse(session.expiresAt)<=Date.now()+30000)await this.renew(session);
+    signal?.throwIfAborted();
+  }
+  async request<T>(path: string, body?: unknown, session?: Session, signal?: AbortSignal, method = body === undefined ? "GET" : "POST", retryExpired=true): Promise<T> {
     if (!this.base) throw new ApiError("새 API 연결을 준비 중입니다. 서비스 주소를 설정해 주세요.");
+    if(session)await this.prepare(session,signal);
+    const sentToken=session?.token;
     const response = await fetch(this.base + path, {
       method, headers: { ...(body === undefined ? {} : { "Content-Type": "application/json" }), ...(session ? { Authorization: `Bearer ${session.token}` } : {}) },
       body: body === undefined ? undefined : JSON.stringify(body), cache: "no-store", signal,
     });
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
+      if(response.status===401 && error.code==="SESSION_EXPIRED" && session?.refreshToken && retryExpired) {
+        // Only retry an explicitly expired token. Authentication runs before
+        // mutations, and revoked/invalid credentials never trigger renewal.
+        if(session.token===sentToken)await this.renew(session);
+        return this.request<T>(path,body,session,signal,method,false);
+      }
+      if(response.status===401 && session) {
+        this.ended.add(session);this.snapshots.delete(session.token);this.proofs.delete(session.token);
+      }
       throw new ApiError(error.error || error.message || `요청 실패 (${response.status})`, response.status, error.code, error.details);
     }
     return response.status === 204 ? undefined as T : response.json();
   }
   async login(id: string, password: string): Promise<Session> {
-    const result = await this.request<{accessToken: string; user: ApiUser}>("/auth/login", id.trim() === "admin" ? {loginId: "admin", password} : {email: id.trim(), password});
-    return {token: result.accessToken, user: userOf(result.user)};
+    const result = await this.request<{accessToken: string; user: ApiUser;expiresAt?:string;refreshToken?:string}>("/auth/login", id.trim() === "admin" ? {loginId: "admin", password} : {email: id.trim(), password});
+    return {token: result.accessToken, user: userOf(result.user),expiresAt:result.expiresAt,refreshToken:result.refreshToken};
   }
   async register(name: string, id: string, password: string, role: Role): Promise<Session> {
     const result = await this.request<{confirmationRequired?: boolean}>("/workspace-auth/register", {name, email: id.trim(), password, role: serverRole(role)});
@@ -71,8 +119,14 @@ export class HttpGateway implements Gateway {
   async confirmEmail(email: string, code: string) { await this.request("/auth/confirm", {email: email.trim(), code}); }
   async resendConfirmation(email: string) { await this.request("/auth/resend-confirmation", {email: email.trim()}); }
   async logout(session: Session) {
+    // End local use before waiting for an in-flight renewal. Then globally
+    // revoke even if that renewal just issued another token for this session.
+    this.ended.add(session);
     this.snapshots.delete(session.token); this.proofs.delete(session.token);
-    await this.request("/auth/logout", {}, session);
+    await this.renewals.get(session)?.catch(()=>{});
+    const token={token:session.token,user:session.user};
+    try {await this.request("/auth/logout", {}, token);}
+    finally {session.refreshToken=undefined;}
   }
   async selectRole(session: Session, role: Role): Promise<Session> {
     await this.request("/auth/test-role", {role: serverRole(role)}, session);
@@ -221,10 +275,10 @@ export class HttpGateway implements Gateway {
       throw new ApiError((error as Error).message,error instanceof ApiError?error.status:0,error instanceof ApiError?error.code:"",{savedVersion:saved.version});
     }
   }
-  subscribe(session: Session,onChange:()=>void,onDisconnect:()=>void,onConnected:()=>void) {
+  subscribe(session: Session,onChange:()=>void,onDisconnect:(message?:string,status?:number)=>void,onConnected:()=>void) {
     return subscribeWorkspace({
       request: <T>(path:string,body?:unknown,signal?:AbortSignal)=>this.request<T>(path,body,session,signal),
-      openStream: (path,signal)=>fetch(this.base+path,{headers:{Authorization:`Bearer ${session.token}`,Accept:"text/event-stream"},cache:"no-store",signal}),
+      openStream: async (path,signal)=>{await this.prepare(session,signal);return fetch(this.base+path,{headers:{Authorization:`Bearer ${session.token}`,Accept:"text/event-stream"},cache:"no-store",signal});},
       onChange,onDisconnect,onConnected,
       proof: id=>{if(id)this.proofs.set(session.token,id);else this.proofs.delete(session.token);},
     });

@@ -1,7 +1,7 @@
 export type Role = "author" | "reviewer" | "reader";
 export type Status = "pending" | "held" | "confirmed";
 export type User = { id: string; name: string; role: Role; admin?: boolean };
-export type Session = { token: string; user: User };
+export type Session = { token: string; user: User; expiresAt?: string; refreshToken?: string };
 export type GenerationResult = { text: string; source: string; generationId?: string; warnings?: string[] };
 export type ReviewCheck = { version: number; content: string; warnings: string[]; status: string };
 export type Member = {
@@ -145,7 +145,7 @@ export interface Gateway {
   subscribe(
     session: Session,
     onChange: () => void,
-    onDisconnect: (message?: string) => void,
+    onDisconnect: (message?: string, status?: number) => void,
     onConnected: () => void,
   ): () => void;
 }

@@ -33,6 +33,15 @@ it("waits for a new-ticket proof after socket open and forwards invalidation",as
  socket.message({type:"invalidate",workspaceId:"w"});expect(changed).toHaveBeenCalledOnce();
  await vi.advanceTimersByTimeAsync(20000);expect(request).toHaveBeenCalledTimes(4);
 });
+it("preserves authentication status on failed ticket renewal and clears proof",async()=>{
+ const {socket,request,failed,proof}=await setup();
+ socket.open();await vi.advanceTimersByTimeAsync(0);
+ socket.message({type:"revalidate",workspaceId:"w",validUntil:Date.now()/1000+60});
+ request.mockRejectedValueOnce(Object.assign(new Error("다시 로그인해 주세요."),{status:401}));
+ await vi.advanceTimersByTimeAsync(20000);
+ expect(failed).toHaveBeenCalledWith("다시 로그인해 주세요.",401);
+ expect(proof).toHaveBeenLastCalledWith(null);
+});
 it("heartbeat never extends the authorization deadline",async()=>{
  const {socket,failed,proof}=await setup();
  socket.open();await vi.advanceTimersByTimeAsync(0);

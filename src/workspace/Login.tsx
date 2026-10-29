@@ -7,8 +7,10 @@ import type { Role, Session } from "./model";
 import { Brand, Modal } from "./ui";
 export default function Login({
   onSession,
+  sessionError = "",
 }: {
   onSession: (s: Session) => void;
+  sessionError?: string;
 }) {
   const [resetScenario, setResetScenario] = useState<boolean | null>(null);
   const [signup, setSignup] = useState(false);
@@ -16,7 +18,7 @@ export default function Login({
   const [password, setPassword] = useState(isMock ? "demo" : "");
   const [name, setName] = useState("");
   const [role, setRole] = useState<Role>("author");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(sessionError);
   const [busy, setBusy] = useState(false);
   const [verification, setVerification] = useState(false);
   const [code, setCode] = useState("");
