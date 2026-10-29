@@ -685,8 +685,7 @@ export default function WorkspaceApp() {
                     className="cb-primary"
                     disabled={
                       busy ||
-                      data.membership?.status === "pending" ||
-                      data.membership?.status === "removed"
+                      data.membership?.status === "pending"
                     }
                   >
                     참여 요청

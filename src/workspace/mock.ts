@@ -312,8 +312,6 @@ export class MockGateway implements Gateway {
       )
         throw new Error("초대코드 또는 역할을 확인해 주세요.");
       const member = db.members.find((m) => m.userId === user.id);
-      if (member?.status === "removed")
-        throw new Error("퇴출 후 재가입 정책은 협의 중입니다.");
       if (member?.status === "active" || member?.status === "pending")
         throw new Error("이미 참여했거나 승인 대기 중입니다.");
       if (member) {

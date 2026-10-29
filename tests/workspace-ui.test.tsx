@@ -35,6 +35,25 @@ async function login(id: string) {
 }
 
 describe("CareBridge role workspace screens", () => {
+  it.each(["author", "reader"] as const)("lets a removed %s request readmission and waits for approval", async (role) => {
+    const reviewer = await api.login("reviewer", "demo");
+    await api.execute(reviewer, "reviewer", {type:"membership",userId:role,status:"removed"});
+    render(<WorkspaceApp />);await login(role);
+    const code = await screen.findByLabelText("초대코드");
+    const button = screen.getByRole("button",{name:"참여 요청"}) as HTMLButtonElement;
+    expect(button.disabled).toBe(false);
+    fireEvent.change(code,{target:{value:"CARE2026"}});
+    fireEvent.click(button);
+    await screen.findByText("참여 상태: 승인 대기");
+    expect((screen.getByRole("button",{name:"참여 요청"}) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.queryByRole("button",{name:"전달 내용 읽기 →"})).toBeNull();
+    await act(async()=>api.execute(reviewer,"reviewer",{type:"membership",userId:role,status:"active"}));
+    await waitFor(()=>expect(screen.queryByLabelText("초대코드")).toBeNull());
+    const state=await api.snapshot(await api.login(role,"demo"),role);
+    expect(state.membership?.status).toBe("active");
+    if(role==="reader") expect(state.publications).toEqual([]);
+    else expect(state.submissions).toHaveLength(3);
+  });
   it("opens the author editor directly and keeps input when visiting their notes", async () => {
     render(<WorkspaceApp />);
     await login("author");
