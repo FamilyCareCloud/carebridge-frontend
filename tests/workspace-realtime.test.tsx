@@ -42,6 +42,45 @@ it("heartbeat never extends the authorization deadline",async()=>{
  await vi.advanceTimersByTimeAsync(1000);
  expect(failed).toHaveBeenCalledOnce();expect(proof).toHaveBeenLastCalledWith(null);
 });
+it("keeps the screen through repeated unchanged proofs while renewing the access deadline",async()=>{
+ const {socket,ready,changed,failed,proof}=await setup();
+ socket.open();await vi.advanceTimersByTimeAsync(0);
+ const renew=()=>socket.message({type:"revalidate",workspaceId:"w",revision:7,role:"viewer",validUntil:Date.now()/1000+60});
+ renew();
+ for(let i=0;i<9;i++) {await vi.advanceTimersByTimeAsync(20000);renew();}
+ expect(ready).toHaveBeenCalledOnce();expect(changed).not.toHaveBeenCalled();
+ expect(failed).not.toHaveBeenCalled();expect(proof).toHaveBeenLastCalledWith("w");
+ // Ordinary heartbeat messages cannot keep stale authorization alive.
+ await vi.advanceTimersByTimeAsync(59000);
+ socket.message({type:"heartbeat",workspaceId:"w"});
+ await vi.advanceTimersByTimeAsync(1000);
+ expect(failed).toHaveBeenCalledOnce();expect(proof).toHaveBeenLastCalledWith(null);
+});
+it("reloads on revision or role changes even when the invalidation event was missed",async()=>{
+ const {socket,changed}=await setup();
+ const renew=(revision:number,role:string)=>socket.message({type:"revalidate",workspaceId:"w",revision,role,validUntil:Date.now()/1000+60});
+ renew(7,"viewer");renew(8,"viewer");
+ expect(changed).toHaveBeenCalledTimes(1);
+ renew(8,"viewer");expect(changed).toHaveBeenCalledTimes(1);
+ renew(8,"author");expect(changed).toHaveBeenCalledTimes(2);
+ // Explicit invalidation must still hide records immediately, even at the same revision.
+ socket.message({type:"invalidate",workspaceId:"w",revision:8});
+ expect(changed).toHaveBeenCalledTimes(3);
+});
+it("does not suppress refreshes when proof revision metadata is missing or malformed",async()=>{
+ const {socket,changed}=await setup();
+ const renew=(revision?:unknown,role?:string)=>socket.message({type:"revalidate",workspaceId:"w",revision,role,validUntil:Date.now()/1000+60});
+ renew(7,"viewer");renew();renew();renew("7","viewer");renew(7);
+ expect(changed).toHaveBeenCalledTimes(4);
+});
+it("revocation after unchanged renewals still clears the access proof immediately",async()=>{
+ const {socket,failed,proof}=await setup();
+ const renewal={type:"revalidate",workspaceId:"w",revision:7,role:"viewer",validUntil:Date.now()/1000+60};
+ socket.message(renewal);socket.message(renewal);
+ socket.message({type:"access-revoked",workspaceId:"w"});socket.message(renewal);
+ expect(failed).toHaveBeenCalledOnce();expect(proof).toHaveBeenLastCalledWith(null);
+ expect(socket.close).toHaveBeenCalledOnce();
+});
 it("revocation closes the channel and ignores late successful proof",async()=>{
  const {socket,failed,ready}=await setup();socket.open();await vi.advanceTimersByTimeAsync(0);
  socket.message({type:"access-revoked",workspaceId:"w"});
