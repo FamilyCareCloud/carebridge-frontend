@@ -1,0 +1,339 @@
+import type { Command, Gateway, GenerationResult, ReviewCheck, Role, Session, Snapshot, Transfer, User } from "./model";
+import { PreviewGateway } from "./mock";
+import { subscribeWorkspace } from "./realtime";
+import { auditLabel } from './audit';
+
+export class ApiError extends Error {
+  status: number;
+  code: string;
+  details?: { confirmationRequired?: boolean; savedVersion?: number };
+  constructor(message: string, status = 0, code = "", details?: { confirmationRequired?: boolean; savedVersion?: number }) { super(message); this.status=status; this.code=code; this.details=details; }
+}
+type ApiUser = { userId: string; name: string; role: string; workspaceRole?: string; isTestAdmin?: boolean; qaRole?: string };
+export type WorkspaceRow = { workspaceId: string; name: string; status: string; role: string; request?: JoinRequest; transfers?: ApiTransfer[] };
+type JoinRequest = { requestId: string; userId: string; name: string; role: string; status: string; version: number; requestedAt: string };
+type ApiTransfer = { transferId: string; targetUserId: string; targetNameAtRequest?: string; targetCurrentName?: string; status: string; version: number };
+type ApiSubject = { subjectId: string; name: string; managementNumber: number; memo?: string };
+type ApiQa = { checks?: {code:string;passed:boolean}[]; issues?: { message: string; severity?:string }[] };
+type ApiAdditionalCheck = {question:string;evidence:{quote:string}};
+function draftWarnings(qa?:ApiQa,checks:ApiAdditionalCheck[]=[]) {
+  return [...new Set([...(qa?.issues?.map(i=>i.message) ?? []),...checks.map(c=>`${c.question} · 원문: ${c.evidence.quote.slice(0,160)}${c.evidence.quote.length>160?'…':''}`)])];
+}
+type ApiSubmission = {
+  submissionId: string; threadId: string; parentSubmissionId?: string; authorId: string;
+  authorNameAtSubmission?: string; authorCurrentName?: string; subject: ApiSubject;
+  memo: string; authorDraft: string; generationId: string;
+  generatedDraft: { translation: { text: string }; source: { language: string }; qa?: ApiQa;additional_checks?:ApiAdditionalCheck[] };
+  reviewContent?: string; reviews: { reason: string; at: string }[];
+  status: "review_pending" | "held" | "confirmed"; version: number; submittedAt: string;
+  finalQa?: { qa: ApiQa };
+};
+type ApiPublication = { publicationId: string; submissionId?: string; subject: ApiSubject; content: string; recipientIds?: string[]; status?: "published" | "revoked" | "unpublished" | "blocked"; publishedAt?: string; recordedAt?: string | null; version: number };
+type AuditPage = { items: { eventId: string; action: string; at: string; actorNameAtEvent?: string; actorCurrentName?: string; actorId: string; reason?: string }[]; nextCursor: string | null };
+const encode = encodeURIComponent;
+const serverRole = (role: Role) => role === "reader" ? "viewer" : role;
+function roleOf(role?: string): Role {
+  if (role === "viewer") return "reader";
+  if (role === "author" || role === "reviewer") return role;
+  throw new ApiError("가입 역할이 연결되지 않은 계정입니다. 담당자에게 역할 배정을 문의해 주세요.", 403, "ROLE_ASSIGNMENT_REQUIRED");
+}
+function userOf(u: ApiUser): User {
+  return { id: u.userId, name: u.name, role: roleOf(u.isTestAdmin ? u.qaRole : u.workspaceRole), admin: u.isTestAdmin === true };
+}
+const empty = (): Snapshot => ({ workspace: null, membership: null, members: [], subjects: [], submissions: [], publications: [], audit: [], revision: 0, transferCandidates: [], transfers: [] });
+function transferOf(t: ApiTransfer, w: WorkspaceRow, incoming: boolean): Transfer {
+  return { id: t.transferId, workspaceId: w.workspaceId, workspaceName: w.name, targetId: t.targetUserId, targetName: t.targetNameAtRequest || t.targetCurrentName || t.targetUserId, status: t.status, version: t.version, incoming };
+}
+
+/** AI requests use the authenticated workspace backend; service keys never enter the browser. */
+export class HttpGateway implements Gateway {
+  mode = "api" as const;
+  private base: string;
+  private snapshots = new Map<string, Snapshot>();
+  private proofs = new Map<string, string>();
+  private renewals = new WeakMap<Session, Promise<void>>();
+  private ended = new WeakSet<Session>();
+  private remembered?: Session;
+  private get sessionKey() { return `carebridge.auth.v1:${this.base}`; }
+  private remember(session: Session) {
+    this.remembered = session;
+    try { sessionStorage.setItem(this.sessionKey, JSON.stringify(session)); } catch { /* Storage unavailable: this tab can still use its in-memory session. */ }
+  }
+  private forget(session: Session) {
+    if (this.remembered !== session) return;
+    this.remembered = undefined;
+    try { sessionStorage.removeItem(this.sessionKey); } catch { /* Storage may be disabled. */ }
+  }
+  async restoreSession(): Promise<Session | null> {
+    let stored: Session;
+    try {
+      const raw = sessionStorage.getItem(this.sessionKey);
+      if (!raw) return null;
+      stored = JSON.parse(raw);
+      if (!stored || typeof stored.token !== 'string' || !stored.token || !stored.user || typeof stored.user.id !== 'string'
+        || (stored.refreshToken !== undefined && typeof stored.refreshToken !== 'string')
+        || (stored.expiresAt !== undefined && !Number.isFinite(Date.parse(stored.expiresAt)))) throw new Error('Invalid stored session');
+    } catch { try { sessionStorage.removeItem(this.sessionKey); } catch { /* disabled storage */ } return null; }
+    this.remembered = stored;
+    try {
+      // Stored identity and role are never trusted without server validation.
+      const user = userOf(await this.request<ApiUser>('/me', undefined, stored));
+      if (user.id !== stored.user.id) throw new ApiError('다시 로그인해 주세요.', 401, 'SESSION_INVALID');
+      stored.user = user;
+      this.remember(stored);
+      return stored;
+    } catch (error) {
+      if (error instanceof ApiError && [401,403].includes(error.status)) this.forget(stored);
+      throw error;
+    }
+  }
+  constructor(base: string) { this.base = base.replace(/\/$/, ""); }
+  private async renew(session: Session): Promise<void> {
+    if (this.ended.has(session) || !session.refreshToken) throw new ApiError("다시 로그인해 주세요.",401,"SESSION_INVALID");
+    const pending=this.renewals.get(session);
+    if(pending) return pending;
+    const renewal=(async()=>{
+      try {
+        const result=await this.request<{accessToken:string;expiresAt:string;refreshToken?:string;user:ApiUser}>("/auth/refresh",{refreshToken:session.refreshToken});
+        if(!result.accessToken || !Number.isFinite(Date.parse(result.expiresAt)) || Date.parse(result.expiresAt)<=Date.now() || result.user?.userId!==session.user.id) throw new ApiError("다시 로그인해 주세요.",401,"SESSION_INVALID");
+        if(this.ended.has(session)) {
+          // logout waits for this renewal and must revoke its freshly issued
+          // token as well. No protected request or cache can use it locally.
+          session.token=result.accessToken;
+          throw new ApiError("로그인이 종료되었습니다.",401,"SESSION_INVALID");
+        }
+        const old=session.token, snapshot=this.snapshots.get(old), proof=this.proofs.get(old);
+        this.snapshots.delete(old);this.proofs.delete(old);
+        session.token=result.accessToken;session.expiresAt=result.expiresAt;
+        if(result.refreshToken) session.refreshToken=result.refreshToken;
+        if(this.remembered===session) this.remember(session);
+        if(snapshot)this.snapshots.set(session.token,snapshot);
+        if(proof)this.proofs.set(session.token,proof);
+      } catch(error) {
+        if(error instanceof ApiError && error.status===401) {
+          this.ended.add(session);this.snapshots.delete(session.token);this.proofs.delete(session.token);
+          this.forget(session);
+        }
+        throw error;
+      } finally {this.renewals.delete(session);}
+    })();
+    this.renewals.set(session,renewal);
+    return renewal;
+  }
+  private async prepare(session: Session, signal?:AbortSignal) {
+    if(this.ended.has(session))throw new ApiError("로그인이 종료되었습니다. 다시 로그인해 주세요.",401,"SESSION_INVALID");
+    if(session.refreshToken && session.expiresAt && Date.parse(session.expiresAt)<=Date.now()+30000)await this.renew(session);
+    signal?.throwIfAborted();
+  }
+  async request<T>(path: string, body?: unknown, session?: Session, signal?: AbortSignal, method = body === undefined ? "GET" : "POST", retryExpired=true): Promise<T> {
+    if (!this.base) throw new ApiError("새 API 연결을 준비 중입니다. 서비스 주소를 설정해 주세요.");
+    if(session)await this.prepare(session,signal);
+    // Even a resolved prepare() yields. logout can run in that gap without
+    // any renewal in progress; never send a protected request afterwards.
+    if(session && this.ended.has(session))throw new ApiError("로그인이 종료되었습니다. 다시 로그인해 주세요.",401,"SESSION_INVALID");
+    const sentToken=session?.token;
+    const response = await fetch(this.base + path, {
+      method, headers: { ...(body === undefined ? {} : { "Content-Type": "application/json" }), ...(session ? { Authorization: `Bearer ${session.token}` } : {}) },
+      body: body === undefined ? undefined : JSON.stringify(body), cache: "no-store", signal,
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      if(response.status===401 && error.code==="SESSION_EXPIRED" && session?.refreshToken && retryExpired) {
+        // Only retry an explicitly expired token. Authentication runs before
+        // mutations, and revoked/invalid credentials never trigger renewal.
+        if(session.token===sentToken)await this.renew(session);
+        return this.request<T>(path,body,session,signal,method,false);
+      }
+      if(response.status===401 && session) {
+        this.ended.add(session);this.snapshots.delete(session.token);this.proofs.delete(session.token);
+        this.forget(session);
+      }
+      throw new ApiError(error.error || error.message || `요청 실패 (${response.status})`, response.status, error.code, error.details);
+    }
+    return response.status === 204 ? undefined as T : response.json();
+  }
+  async login(id: string, password: string): Promise<Session> {
+    const result = await this.request<{accessToken: string; user: ApiUser;expiresAt?:string;refreshToken?:string}>("/auth/login", id.trim() === "admin" ? {loginId: "admin", password} : {email: id.trim(), password});
+    const session = {token: result.accessToken, user: userOf(result.user),expiresAt:result.expiresAt,refreshToken:result.refreshToken};
+    this.remember(session);
+    return session;
+  }
+  async register(name: string, id: string, password: string, role: Role): Promise<Session> {
+    const result = await this.request<{confirmationRequired?: boolean}>("/workspace-auth/register", {name, email: id.trim(), password, role: serverRole(role)});
+    if (result.confirmationRequired) throw new ApiError("이메일로 받은 인증코드를 입력해 주세요.", 0, "EMAIL_NOT_VERIFIED");
+    return this.login(id, password);
+  }
+  async confirmEmail(email: string, code: string) { await this.request("/auth/confirm", {email: email.trim(), code}); }
+  async resendConfirmation(email: string) { await this.request("/auth/resend-confirmation", {email: email.trim()}); }
+  async logout(session: Session) {
+    // End local use before waiting for an in-flight renewal. Then globally
+    // revoke even if that renewal just issued another token for this session.
+    this.ended.add(session);
+    this.forget(session);
+    this.snapshots.delete(session.token); this.proofs.delete(session.token);
+    await this.renewals.get(session)?.catch(()=>{});
+    const token={token:session.token,user:session.user};
+    try {await this.request("/auth/logout", {}, token);}
+    finally {session.refreshToken=undefined;}
+  }
+  async selectRole(session: Session, role: Role): Promise<Session> {
+    await this.request("/auth/test-role", {role: serverRole(role)}, session);
+    const user = userOf(await this.request<ApiUser>("/me", undefined, session));
+    this.snapshots.delete(session.token); this.proofs.delete(session.token);
+    const next = {...session, user};
+    this.remember(next);
+    return next;
+  }
+  async snapshot(session: Session, role: Role): Promise<Snapshot> {
+    const rows = await this.request<WorkspaceRow[]>("/workspaces", undefined, session);
+    const data = empty();
+    data.transfers = rows.flatMap(w => (w.transfers ?? []).map(t => transferOf(t,w,true)));
+    const active = rows.find(w => w.status === "active");
+    if (!active) {
+      const last = rows.find(w => w.status === "pending") ?? rows.at(-1);
+      if (last && ["pending", "rejected", "removed"].includes(last.status)) data.membership = {userId:session.user.id, name:session.user.name, role, status: last.status as "pending" | "rejected" | "removed"};
+      this.snapshots.set(session.token, data);
+      return data;
+    }
+    // Active records are only loaded after the event channel proves current access.
+    if (this.proofs.get(session.token) !== active.workspaceId) return data;
+    const path = `/workspaces/${encode(active.workspaceId)}`;
+    const w = await this.request<{workspaceId:string;name:string;inviteCode?:string;ownerReviewerId:string;revision:number;role:string}>(path, undefined, session);
+    if (roleOf(w.role) !== role) throw new ApiError("서버 역할이 변경되었습니다. 다시 로그인해 주세요.",403,"ROLE_CHANGED");
+    data.workspace = {id:w.workspaceId,name:w.name,code:w.inviteCode ?? "",ownerId:w.ownerReviewerId};
+    data.revision=w.revision;
+    data.membership={userId:session.user.id,name:session.user.name,role,status:"active"};
+    if(role !== "reader") {
+      const subjects=await this.request<ApiSubject[]>(path+"/subjects",undefined,session);
+      data.subjects=subjects.map(s=>({id:s.subjectId,name:s.name,number:s.managementNumber,memo:s.memo ?? ""}));
+      const list=await this.request<{submissionId:string}[]>(path+"/submissions",undefined,session);
+      // Current backend bounds the aggregate; each detail remains server-authorized.
+      for(const row of list) {
+        const s=await this.request<ApiSubmission>(path+"/submissions/"+encode(row.submissionId),undefined,session);
+        data.submissions.push({id:s.submissionId,threadId:s.threadId,previousId:s.parentSubmissionId || undefined,
+          authorId:s.authorId,authorName:s.authorNameAtSubmission || s.authorCurrentName || s.authorId,
+          subjectId:s.subject.subjectId,source:s.memo,language:s.generatedDraft.source.language,generated:s.generatedDraft.translation.text,
+          final:s.authorDraft,review:s.reviewContent ?? "",reason:s.reviews.at(-1)?.reason ?? "",
+          status:s.status==="review_pending"?"pending":s.status,createdAt:s.submittedAt,reviewedAt:s.reviews.at(-1)?.at,version:s.version,
+          generationId:s.generationId,warnings:draftWarnings(s.finalQa?.qa ?? s.generatedDraft.qa,s.generatedDraft.additional_checks)});
+      }
+    }
+    if(role !== "author") {
+      const list=await this.request<ApiPublication[]>(path+"/publications",undefined,session);
+      data.publications=list.map(p=>({id:p.publicationId,submissionId:p.submissionId ?? "",subjectName:p.subject.name,subjectNumber:p.subject.managementNumber,
+        content:p.content,recipients:role==="reader"?[]:p.recipientIds ?? [],state:role==="reader"?"published":p.status ?? "unpublished",publishedAt:p.publishedAt ?? "",
+        recordedAt:p.recordedAt ?? data.submissions.find(s=>s.id===p.submissionId)?.createdAt,version:p.version}));
+    }
+    if(role==="reviewer") {
+      const members=await this.request<{userId:string;name:string;role:string;status:"active"}[]>(path+"/members",undefined,session);
+      data.members=members.map(m=>({...m,role:roleOf(m.role)}));
+      const requests=await this.request<JoinRequest[]>(path+"/join-requests",undefined,session);
+      data.members.push(...requests.filter(r=>r.status==="pending").map(r=>({userId:r.userId,name:r.name,role:roleOf(r.role),status:"pending" as const,requestId:r.requestId,requestVersion:r.version,requestedAt:r.requestedAt})));
+      let cursor: string | null=null;
+      const seen=new Set<string>();
+      do {
+        const page: AuditPage=await this.request<AuditPage>(path+"/audit?limit=50"+(cursor?"&cursor="+encode(cursor):""),undefined,session);
+        data.audit.push(...page.items.map(a=>({id:a.eventId,action:a.action,text:auditLabel(a.action),actor:a.actorNameAtEvent || a.actorCurrentName || a.actorId,at:a.at,details:a.reason ? `사유: ${a.reason}` : undefined})));
+        cursor=page.nextCursor;
+        if(cursor && seen.has(cursor)) throw new ApiError("이력 페이지 응답을 확인할 수 없습니다.");
+        if(cursor) seen.add(cursor);
+      } while(cursor);
+      const transfers=await this.request<ApiTransfer[]>(path+"/transfers",undefined,session);
+      data.transfers!.push(...transfers.map(t=>transferOf(t,active,false)));
+    }
+    this.snapshots.set(session.token,data);
+    return data;
+  }
+  async execute(session: Session, _role: Role, c: Command): Promise<void> {
+    if(c.type==="createWorkspace") { await this.request("/workspaces",{name:c.name},session); return; }
+    if(c.type==="join") {await this.request("/workspaces/join-requests",{code:c.code},session);return;}
+    if(c.type==="acceptTransfer" || c.type==="cancelTransfer") {
+      await this.request(`/workspaces/${encode(c.workspaceId)}/transfers/${encode(c.id)}/${c.type==="acceptTransfer"?"accept":"cancel"}`,{expectedVersion:c.version},session);return;
+    }
+    const data=this.snapshots.get(session.token);
+    if(!data?.workspace) throw new ApiError("작업 그룹을 다시 조회해 주세요.");
+    const path="/workspaces/"+encode(data.workspace.id);
+    switch(c.type) {
+      case "membership": {
+        if(c.status==="removed") { await this.request(path+"/members/"+encode(c.userId),{expectedVersion:data.revision},session,undefined,"DELETE");break; }
+        const member=data.members.find(m=>m.userId===c.userId && m.status==="pending");
+        const requestId=c.requestId ?? member?.requestId, version=c.requestVersion ?? member?.requestVersion;
+        if(!requestId || !version) throw new ApiError("참여 요청을 다시 조회해 주세요.");
+        await this.request(path+"/join-requests/"+encode(requestId)+(c.status==="active"?"/approve":"/reject"),{expectedVersion:version},session);break;
+      }
+      case "subject": await this.request(path+"/subjects",{name:c.name,...(c.memo.trim()?{memo:c.memo}:{})},session);break;
+      case "submit": {
+        const previous=data.submissions.find(s=>s.id===c.previousId);
+        const generationId=c.generationId ?? previous?.generationId;
+        if(!generationId || (previous && previous.source!==c.source && !c.generationId)) throw new ApiError("현재 원문으로 초안을 다시 생성해 주세요.");
+        await this.request(path+"/submissions",{requestId:c.requestId,subjectId:c.subjectId,generationId,memo:c.source,authorDraft:c.final,confirmSource:true,...(c.previousId?{parentSubmissionId:c.previousId}:{})},session);break;
+      }
+      case "review": await this.request(path+"/submissions/"+encode(c.id)+"/review",{
+        expectedVersion:c.version,decision:c.status==="pending"?"edit":c.status==="held"?"hold":"confirm",content:c.content,
+        ...(c.reason.trim()?{reason:c.reason}:{}),...(c.status==="confirmed"?{confirmSource:true,confirmChecks:true}:{})
+      },session);break;
+      case "publish": {
+        // Recover prepared records from the server after a lost response or refresh.
+        const records=await this.request<ApiPublication[]>(path+"/publications",undefined,session);
+        const published=records.find(p=>p.submissionId===c.submissionId && p.status==="published");
+        if (!c.publicationId && published) {
+          if (published.content===c.content && JSON.stringify(published.recipientIds)===JSON.stringify(c.recipients)) return;
+          throw new ApiError("이미 공개된 기록입니다. 정정 기능을 이용해 주세요.");
+        }
+        const existing=c.publicationId?records.find(p=>p.publicationId===c.publicationId):
+          records.find(p=>p.submissionId===c.submissionId && p.status!=="published");
+        if(c.publicationId && !existing) throw new ApiError("공개 기록을 다시 조회해 주세요.");
+        let p: ApiPublication;
+        if(existing) {
+          const unchanged=existing.content===c.content && JSON.stringify(existing.recipientIds)===JSON.stringify(c.recipients);
+          if(unchanged && existing.status==="published") return;
+          p=unchanged?existing:await this.request<ApiPublication>(path+"/publications/"+encode(existing.publicationId),{
+            expectedVersion:c.publicationVersion ?? existing.version,content:c.content,recipientIds:c.recipients
+          },session,undefined,"PATCH");
+        } else p=await this.request<ApiPublication>(path+"/publications",{submissionId:c.submissionId,expectedVersion:c.version,content:c.content,recipientIds:c.recipients},session);
+        await this.request(path+"/publications/"+encode(p.publicationId)+"/publish",{expectedVersion:p.version},session);break;
+      }
+      case "revoke": await this.request(path+"/publications/"+encode(c.id)+"/revoke",{expectedVersion:c.version},session);break;
+      case "transfer": await this.request(path+"/transfers",{expectedVersion:data.revision,targetUserId:c.userId},session);break;
+    }
+  }
+  private aiPath(session: Session, role: Role, expected: Role) {
+    const data=this.snapshots.get(session.token);
+    if (role!==expected || !data?.workspace || data.membership?.status!=="active" || this.proofs.get(session.token)!==data.workspace.id) throw new ApiError("현재 작업 그룹의 권한을 다시 확인해 주세요.",403,"WORKSPACE_ACCESS_REQUIRED");
+    return "/workspaces/"+encode(data.workspace.id);
+  }
+  async generate(session: Session, role: Role, source: string, language: string): Promise<GenerationResult> {
+    const path=this.aiPath(session,role,"author");
+    const result=await this.request<{generationId:string;draft:{source:{text:string};translation:{text:string};qa:ApiQa;additional_checks?:ApiAdditionalCheck[]}}>(path+"/drafts",{memo:source,sourceLanguage:language,dataUse:"synthetic_deidentified"},session);
+    if (!result.generationId || result.draft?.source?.text!==source || !result.draft.translation?.text?.trim()) throw new ApiError("원문에 연결된 초안 응답을 확인하지 못했습니다.",502,"CAREBRIDGE_BAD_RESPONSE");
+    return {text:result.draft.translation.text,source,generationId:result.generationId,warnings:draftWarnings(result.draft.qa,result.draft.additional_checks)};
+  }
+  async transcribe(session: Session, role: Role, audioBase64: string, language: string) {
+    const path=this.aiPath(session,role,"author");
+    const result=await this.request<{text:string;requiresTranscriptReview:true}>(path+"/transcriptions",{audioBase64,sourceLanguage:language,dataUse:"synthetic_deidentified"},session);
+    if (!result.text?.trim() || result.requiresTranscriptReview!==true) throw new ApiError("음성 인식 결과를 확인하지 못했습니다.",502,"CAREBRIDGE_BAD_RESPONSE");
+    return result;
+  }
+  async checkReview(session: Session, role: Role, id: string, version: number, content: string, reason: string): Promise<ReviewCheck> {
+    const path=this.aiPath(session,role,"reviewer")+"/submissions/"+encode(id);
+    const saved=await this.request<{version:number}>(path+"/review",{expectedVersion:version,decision:"edit",content,...(reason.trim()?{reason}:{})},session);
+    try {
+      const result=await this.request<{version:number;qa:ApiQa}>(path+"/check",{expectedVersion:saved.version},session);
+      if (result.version!==saved.version || !Array.isArray(result.qa?.checks) || !Array.isArray(result.qa?.issues)) throw new ApiError("최종 검사 응답의 버전·형식을 확인하지 못했습니다.",502,"CAREBRIDGE_BAD_RESPONSE");
+      const hold=result.qa.checks.some(c=>c.passed===false)||result.qa.issues.some(i=>i.severity==="hold");
+      return {version:saved.version,content,status:hold?"hold":"review_required",warnings:result.qa.issues.map(i=>i.message)};
+    } catch(error) {
+      throw new ApiError((error as Error).message,error instanceof ApiError?error.status:0,error instanceof ApiError?error.code:"",{savedVersion:saved.version});
+    }
+  }
+  subscribe(session: Session,onChange:()=>void,onDisconnect:(message?:string,status?:number)=>void,onConnected:()=>void) {
+    return subscribeWorkspace({
+      request: <T>(path:string,body?:unknown,signal?:AbortSignal)=>this.request<T>(path,body,session,signal),
+      openStream: async (path,signal)=>{await this.prepare(session,signal);return fetch(this.base+path,{headers:{Authorization:`Bearer ${session.token}`,Accept:"text/event-stream"},cache:"no-store",signal});},
+      onChange,onDisconnect,onConnected,
+      proof: id=>{if(id)this.proofs.set(session.token,id);else this.proofs.delete(session.token);},
+    });
+  }
+}
+export const isMock = import.meta.env.DEV && import.meta.env.MODE === "carebridge";
+export const gateway: Gateway = isMock ? new PreviewGateway() : new HttpGateway(import.meta.env.VITE_CAREBRIDGE_API_URL || "");

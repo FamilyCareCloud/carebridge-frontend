@@ -1,0 +1,21 @@
+name: Frontend checks
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build

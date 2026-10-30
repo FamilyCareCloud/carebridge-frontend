@@ -25,6 +25,7 @@ import { RealRecords } from "./RealRecords";
 import { RealSchedules } from "./RealSchedules";
 import { RealFamily } from "./RealFamily";
 
+import { CarebridgePage } from "./CarebridgePage";
 import { RealAssistant } from "./RealAssistant";
 import { RealProfile } from "./RealProfile";
 
@@ -34,13 +35,15 @@ export type RealPage =
   | "일정"
   | "AI 인수인계"
   | "가족 관리"
-  | "AI 비서";
+  | "AI 비서"
+  | "케어브릿지";
 const navigation: NavItem[] = [
   { name: "대시보드", icon: "home", english: "Overview" },
   { name: "돌봄 기록", icon: "clock", english: "Care Timeline" },
   { name: "일정", icon: "calendar", english: "Schedule" },
   { name: "AI 인수인계", icon: "spark", english: "Care Handoff" },
   { name: "AI 비서", icon: "mic", english: "Assistant" },
+  { name: "케어브릿지", icon: "file", english: "CareBridge" },
   { name: "가족 관리", icon: "users", english: "Our Family" },
 ];
 
@@ -225,6 +228,7 @@ export function RealApp() {
         <div hidden={page !== "AI 비서"}>
           <RealAssistant ctx={ctx} />
         </div>
+        {page === "케어브릿지" && <CarebridgePage key={ctx.groupId + ctx.token} ctx={ctx} />}
         <div hidden={page !== "가족 관리"}>
           <RealFamily ctx={ctx} />
         </div>

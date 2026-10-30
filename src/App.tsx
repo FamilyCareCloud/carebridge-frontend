@@ -1,9 +1,5 @@
-import { RealApp } from "./RealApp";
-import "./App.css";
-import "./ux.css";
-import "./viewport-layout.css";
-import "./soft-surfaces.css";
+import WorkspaceApp from './workspace/WorkspaceApp';
 
 export default function App() {
-  return <RealApp />;
+  return <WorkspaceApp />;
 }
