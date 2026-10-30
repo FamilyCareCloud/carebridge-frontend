@@ -80,7 +80,7 @@ npm test
 npm run build
 ```
 
-제출 버전 기준 자동 테스트 **98개**, lint와 build를 통과했습니다. 빌드 결과는 `dist/`입니다. GitHub Actions가 PR을 검사하며, `develop` 변경은 Amplify에서 자동 배포합니다. `main`은 현재 Amplify에 연결돼 있지 않습니다.
+현재 자동 테스트는 **91개**이며 화면·권한·세션·전송·언어 동작을 검사합니다. 빌드 결과는 `dist/`입니다. GitHub Actions가 PR을 검사하며, `develop` 변경은 Amplify에서 자동 배포합니다. `main`은 현재 Amplify에 연결돼 있지 않습니다.
 
 AI 초안은 합성·비식별 사례의 검토 보조용입니다. 자동 공식기록·의료 판단이나 현장 효과를 보증하지 않습니다. 배포 서비스의 AI 기능은 백엔드와 별도 AI 서버의 가동 상태에 의존합니다.
 

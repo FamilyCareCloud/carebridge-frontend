@@ -75,7 +75,7 @@ it('localizes publication dates and labels without translating shared record con
   render(<WorkspaceApp />);await login('reader');
   changeLanguage('en');
   const shared=(await gateway.snapshot(await gateway.login('reader','demo'),'reader')).publications[0];
-  expect(screen.getByText(shared.content)).toBeTruthy();
+  expect(await screen.findByText(shared.content)).toBeTruthy();
   expect(screen.getByRole('heading',{name:/김철수/})).toBeTruthy();
   expect(screen.getByText(`Recorded at ${stamp(shared.recordedAt!)}`)).toBeTruthy();
   expect(stamp('2026-10-30T00:00:00Z')).not.toContain('월');

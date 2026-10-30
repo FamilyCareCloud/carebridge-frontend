@@ -1,4 +1,4 @@
-// Mic recording helpers for the assistant voice question (POST /groups/{g}/assistant/voice).
+// Microphone recording helpers for CareBridge workspace transcriptions.
 // Lambda caps the complete JSON body at 4 MiB; base64 expands raw audio by 4/3.
 export const AUDIO_MAX_BYTES = 3 * 1024 * 1024 - 1024;
 
